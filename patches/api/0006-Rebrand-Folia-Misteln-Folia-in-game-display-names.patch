@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand: Folia -> Misteln-Folia in-game display names
 
 
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
-index 9df9d09aa477d4cd3c496ba0933c816df1ef0964..f96924ae52d41e9948ca6381c2ee9bb921daef05 100644
+index 9df9d09aa477d4cd3c496ba0933c816df1ef0964..04776e69c681b89a0785c212964a1da74efa55ec 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
 @@ -18,6 +18,13 @@ public interface ServerBuildInfo {
@@ -16,7 +16,7 @@ index 9df9d09aa477d4cd3c496ba0933c816df1ef0964..f96924ae52d41e9948ca6381c2ee9bb9
 +    /**
 +     * The brand id for Misteln-Folia.
 +     */
-+    Key BRAND_MISTELN_ID = Key.key("BrilliantTeam", "Misteln-Folia");
++    Key BRAND_MISTELN_ID = Key.key("brilliantteam", "misteln-folia");
 +    // Misteln-Folia end
 +
      /**
