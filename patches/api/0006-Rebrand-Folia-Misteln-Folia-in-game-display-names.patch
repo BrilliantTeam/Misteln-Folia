@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Thu, 21 May 2026 23:31:09 +0800
+Subject: [PATCH] Rebrand: Folia -> Misteln-Folia in-game display names
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 9df9d09aa477d4cd3c496ba0933c816df1ef0964..f96924ae52d41e9948ca6381c2ee9bb921daef05 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -18,6 +18,13 @@ public interface ServerBuildInfo {
+      */
+     Key BRAND_PAPER_ID = Key.key("papermc", "paper");
+ 
++    // Misteln-Folia start
++    /**
++     * The brand id for Misteln-Folia.
++     */
++    Key BRAND_MISTELN_ID = Key.key("BrilliantTeam", "Misteln-Folia");
++    // Misteln-Folia end
++
+     /**
+      * Gets the {@code ServerBuildInfo}.
+      *
+diff --git a/src/main/java/org/bukkit/command/defaults/VersionCommand.java b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+index e64bb57f74e6d6f78927be228825b3e0bdf41f48..02ae18b954296d304936fe526800bd42e50f8e80 100644
+--- a/src/main/java/org/bukkit/command/defaults/VersionCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+@@ -195,7 +195,7 @@ public class VersionCommand extends BukkitCommand {
+                 return;
+             }
+             versionWaiters.add(sender);
+-            sender.sendMessage(Component.text("Checking version, please wait...", NamedTextColor.WHITE, TextDecoration.ITALIC)); // Paper
++            sender.sendMessage(Component.text("Checking Misteln-Folia version, please wait...", NamedTextColor.WHITE, TextDecoration.ITALIC)); // Paper // Misteln-Folia
+             if (!versionTaskStarted) {
+                 versionTaskStarted = true;
+                 new Thread(new Runnable() {
