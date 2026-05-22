@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 10:37:19 +0800
+Subject: [PATCH] purpur-port: Configurable sponge absorbs lava settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index baf047e2549abbff7c8015dea580ceb82dd0a050..32de271ce0c604f84c85bf66202fc5779ee96b86 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -380,6 +380,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean playerSleepNearMonsters = false;
+         @Comment("If true, sneaking players can break individual slabs from a double slab, dropping the other half.")
+         public boolean slabHalfBreak = false;
++        @Comment("If true, sponges will absorb lava in addition to water.")
++        public boolean spongeAbsorbsLava = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/world/level/block/SpongeBlock.java b/src/main/java/net/minecraft/world/level/block/SpongeBlock.java
+index 902825ec9ea05f4418b45f56a008d73f217bd178..edc19884231244cbd9046f485d84260c97752384 100644
+--- a/src/main/java/net/minecraft/world/level/block/SpongeBlock.java
++++ b/src/main/java/net/minecraft/world/level/block/SpongeBlock.java
+@@ -77,7 +77,7 @@ public class SpongeBlock extends Block {
+                 FluidState fluid = blockList.getFluidState(blockposition1);
+                 // CraftBukkit end
+ 
+-                if (!fluid.is(FluidTags.WATER)) {
++                if (!fluid.is(FluidTags.WATER) && (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.spongeAbsorbsLava || !fluid.is(FluidTags.LAVA))) { // purpur-port
+                     return false;
+                 } else {
+                     Block block = iblockdata.getBlock();
+@@ -92,6 +92,10 @@ public class SpongeBlock extends Block {
+ 
+                     if (iblockdata.getBlock() instanceof LiquidBlock) {
+                         blockList.setBlock(blockposition1, Blocks.AIR.defaultBlockState(), 3); // CraftBukkit
++                    // purpur-port start
++                    } else if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.spongeAbsorbsLava && fluid.is(FluidTags.LAVA)) { // purpur-port
++                        blockList.setBlock(blockposition1, Blocks.AIR.defaultBlockState(), 3);
++                    // purpur-port end
+                     } else {
+                         if (!iblockdata.is(Blocks.KELP) && !iblockdata.is(Blocks.KELP_PLANT) && !iblockdata.is(Blocks.SEAGRASS) && !iblockdata.is(Blocks.TALL_SEAGRASS)) {
+                             return false;
+@@ -149,4 +153,4 @@ public class SpongeBlock extends Block {
+         return false;
+         // CraftBukkit end
+     }
+-}
++}
+\ No newline at end of file
