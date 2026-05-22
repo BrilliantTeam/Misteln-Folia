@@ -1,0 +1,206 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 10:26:16 +0800
+Subject: [PATCH] purpur-port: Configurable slab half break settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 41579ef15f4f20c999f3c6f184c8b0d31bf51eef..baf047e2549abbff7c8015dea580ceb82dd0a050 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -378,6 +378,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean netherWartAffectedByBonemeal = false;
+         @Comment("If true, players can sleep even when monsters are nearby.")
+         public boolean playerSleepNearMonsters = false;
++        @Comment("If true, sneaking players can break individual slabs from a double slab, dropping the other half.")
++        public boolean slabHalfBreak = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayerGameMode.java b/src/main/java/net/minecraft/server/level/ServerPlayerGameMode.java
+index 2fec6e3594b5946077102ca4abded9c2fc301f89..ef58b9976068396b1605c1385c85757cd5934995 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayerGameMode.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayerGameMode.java
+@@ -400,6 +400,7 @@ public class ServerPlayerGameMode {
+                 } else {capturedBlockEntity = true;} // Paper - Send block entities after destroy prediction
+                 return false;
+             }
++            if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.slabHalfBreak && this.player.isShiftKeyDown() && iblockdata.getBlock() instanceof net.minecraft.world.level.block.SlabBlock && ((net.minecraft.world.level.block.SlabBlock) iblockdata.getBlock()).halfBreak(iblockdata, pos, this.player)) return true; // purpur-port
+         }
+         // CraftBukkit end
+ 
+@@ -621,4 +622,4 @@ public class ServerPlayerGameMode {
+     public void setLevel(ServerLevel world) {
+         this.level = world;
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/world/level/block/SlabBlock.java b/src/main/java/net/minecraft/world/level/block/SlabBlock.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ba4aa69425d796d306791ea193f9c6b21a065f0b
+--- /dev/null
++++ b/src/main/java/net/minecraft/world/level/block/SlabBlock.java
+@@ -0,0 +1,162 @@
++package net.minecraft.world.level.block;
++
++import com.mojang.serialization.MapCodec;
++import javax.annotation.Nullable;
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
++import net.minecraft.tags.FluidTags;
++import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.context.BlockPlaceContext;
++import net.minecraft.world.level.BlockGetter;
++import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.block.state.StateDefinition;
++import net.minecraft.world.level.block.state.properties.BlockStateProperties;
++import net.minecraft.world.level.block.state.properties.BooleanProperty;
++import net.minecraft.world.level.block.state.properties.EnumProperty;
++import net.minecraft.world.level.block.state.properties.SlabType;
++import net.minecraft.world.level.material.Fluid;
++import net.minecraft.world.level.material.FluidState;
++import net.minecraft.world.level.material.Fluids;
++import net.minecraft.world.level.pathfinder.PathComputationType;
++import net.minecraft.world.phys.shapes.CollisionContext;
++import net.minecraft.world.phys.shapes.Shapes;
++import net.minecraft.world.phys.shapes.VoxelShape;
++
++public class SlabBlock extends Block implements SimpleWaterloggedBlock {
++    public static final MapCodec<SlabBlock> CODEC = simpleCodec(SlabBlock::new);
++    public static final EnumProperty<SlabType> TYPE = BlockStateProperties.SLAB_TYPE;
++    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
++    protected static final VoxelShape BOTTOM_AABB = Block.box(0.0, 0.0, 0.0, 16.0, 8.0, 16.0);
++    protected static final VoxelShape TOP_AABB = Block.box(0.0, 8.0, 0.0, 16.0, 16.0, 16.0);
++
++    @Override
++    public MapCodec<? extends SlabBlock> codec() {
++        return CODEC;
++    }
++
++    public SlabBlock(BlockBehaviour.Properties settings) {
++        super(settings);
++        this.registerDefaultState(this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM).setValue(WATERLOGGED, Boolean.valueOf(false)));
++    }
++
++    @Override
++    protected boolean useShapeForLightOcclusion(BlockState state) {
++        return state.getValue(TYPE) != SlabType.DOUBLE;
++    }
++
++    @Override
++    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
++        builder.add(TYPE, WATERLOGGED);
++    }
++
++    @Override
++    protected VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
++        SlabType slabType = state.getValue(TYPE);
++        switch (slabType) {
++            case DOUBLE:
++                return Shapes.block();
++            case TOP:
++                return TOP_AABB;
++            default:
++                return BOTTOM_AABB;
++        }
++    }
++
++    @Nullable
++    @Override
++    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
++        BlockPos blockPos = ctx.getClickedPos();
++        BlockState blockState = ctx.getLevel().getBlockState(blockPos);
++        if (blockState.is(this)) {
++            return blockState.setValue(TYPE, SlabType.DOUBLE).setValue(WATERLOGGED, Boolean.valueOf(false));
++        } else {
++            FluidState fluidState = ctx.getLevel().getFluidState(blockPos);
++            BlockState blockState2 = this.defaultBlockState()
++                .setValue(TYPE, SlabType.BOTTOM)
++                .setValue(WATERLOGGED, Boolean.valueOf(fluidState.getType() == Fluids.WATER));
++            Direction direction = ctx.getClickedFace();
++            return direction != Direction.DOWN && (direction == Direction.UP || !(ctx.getClickLocation().y - (double)blockPos.getY() > 0.5))
++                ? blockState2
++                : blockState2.setValue(TYPE, SlabType.TOP);
++        }
++    }
++
++    @Override
++    protected boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
++        ItemStack itemStack = context.getItemInHand();
++        SlabType slabType = state.getValue(TYPE);
++        if (slabType == SlabType.DOUBLE || !itemStack.is(this.asItem())) {
++            return false;
++        } else if (context.replacingClickedOnBlock()) {
++            boolean bl = context.getClickLocation().y - (double)context.getClickedPos().getY() > 0.5;
++            Direction direction = context.getClickedFace();
++            return slabType == SlabType.BOTTOM
++                ? direction == Direction.UP || bl && direction.getAxis().isHorizontal()
++                : direction == Direction.DOWN || !bl && direction.getAxis().isHorizontal();
++        } else {
++            return true;
++        }
++    }
++
++    @Override
++    protected FluidState getFluidState(BlockState state) {
++        return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
++    }
++
++    @Override
++    public boolean placeLiquid(LevelAccessor world, BlockPos pos, BlockState state, FluidState fluidState) {
++        return state.getValue(TYPE) != SlabType.DOUBLE && SimpleWaterloggedBlock.super.placeLiquid(world, pos, state, fluidState);
++    }
++
++    @Override
++    public boolean canPlaceLiquid(@Nullable Player player, BlockGetter world, BlockPos pos, BlockState state, Fluid fluid) {
++        return state.getValue(TYPE) != SlabType.DOUBLE && SimpleWaterloggedBlock.super.canPlaceLiquid(player, world, pos, state, fluid);
++    }
++
++    @Override
++    protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
++        if (state.getValue(WATERLOGGED)) {
++            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
++        }
++
++        return super.updateShape(state, direction, neighborState, world, pos, neighborPos);
++    }
++
++    @Override
++    protected boolean isPathfindable(BlockState state, PathComputationType type) {
++        switch (type) {
++            case LAND:
++                return false;
++            case WATER:
++                return state.getFluidState().is(FluidTags.WATER);
++            case AIR:
++                return false;
++            default:
++                return false;
++        }
++    }
++
++    // Purpur start
++    public boolean halfBreak(BlockState state, BlockPos pos, net.minecraft.server.level.ServerPlayer player) {
++        if (state.getValue(SlabBlock.TYPE) != SlabType.DOUBLE) {
++            return false;
++        }
++        net.minecraft.world.phys.HitResult result = player.getRayTrace(16, net.minecraft.world.level.ClipContext.Fluid.NONE);
++        if (result.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
++            return false;
++        }
++        double hitY = result.getLocation().y();
++        int blockY = org.bukkit.util.NumberConversions.floor(hitY);
++        player.level().setBlock(pos, state.setValue(SlabBlock.TYPE, (hitY - blockY > 0.5 || blockY - pos.getY() == 1) ? SlabType.BOTTOM : SlabType.TOP), 3);
++        if (!player.getAbilities().instabuild) {
++            net.minecraft.world.entity.item.ItemEntity item = new net.minecraft.world.entity.item.ItemEntity(player.level(), pos.getX(), pos.getY(), pos.getZ(), new ItemStack(asItem()));
++            item.setDefaultPickUpDelay();
++            player.level().addFreshEntity(item);
++        }
++        return true;
++    }
++    // Purpur end
++}
