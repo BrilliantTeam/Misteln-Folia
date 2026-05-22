@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 10:10:08 +0800
+Subject: [PATCH] purpur-port: Configurable player Sleep Near Monsters settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index f6fb9aab188ccff53486b6beec8bc7406ba8e33d..41579ef15f4f20c999f3c6f184c8b0d31bf51eef 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -376,6 +376,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean minecartPlaceAnywhere = false;
+         @Comment("If true, nether wart can be grown by using bone meal.")
+         public boolean netherWartAffectedByBonemeal = false;
++        @Comment("If true, players can sleep even when monsters are nearby.")
++        public boolean playerSleepNearMonsters = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 1e56932afa725ebe90e9bd6f325a0aa2217ff2c6..14bd83dfde9105acd9bb0efe1a55f42ac5d97eb7 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -1919,7 +1919,7 @@ public class ServerPlayer extends Player {
+                             return entitymonster.isPreventingPlayerRest(this);
+                         });
+ 
+-                        if (!list.isEmpty()) {
++                        if (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.playerSleepNearMonsters && !list.isEmpty()) { // purpur-port
+                             return Either.left(Player.BedSleepingProblem.NOT_SAFE);
+                         }
+                     }
