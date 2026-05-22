@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 09:53:39 +0800
+Subject: [PATCH] purpur-port: Configurable nether Wart Affected By Bonemeal
+ settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index fea9ca04496c178a5234e05d609116cd7096d813..f6fb9aab188ccff53486b6beec8bc7406ba8e33d 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -374,6 +374,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean deathMessageOnlyBroadcastToAffectedPlayer = false;
+         @Comment("If true, minecarts can be placed on any block, not just rails.")
+         public boolean minecartPlaceAnywhere = false;
++        @Comment("If true, nether wart can be grown by using bone meal.")
++        public boolean netherWartAffectedByBonemeal = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/world/level/block/NetherWartBlock.java b/src/main/java/net/minecraft/world/level/block/NetherWartBlock.java
+index acbd60a2f162fe0e254e36d0e8e7face3fc8a7b3..46eda812dec23b3a3f5f48c6c6718c26cb90af00 100644
+--- a/src/main/java/net/minecraft/world/level/block/NetherWartBlock.java
++++ b/src/main/java/net/minecraft/world/level/block/NetherWartBlock.java
+@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+-public class NetherWartBlock extends BushBlock {
++public class NetherWartBlock extends BushBlock implements BonemealableBlock { // purpur-port
+ 
+     public static final MapCodec<NetherWartBlock> CODEC = simpleCodec(NetherWartBlock::new);
+     public static final int MAX_AGE = 3;
+@@ -68,4 +68,24 @@ public class NetherWartBlock extends BushBlock {
+     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+         builder.add(NetherWartBlock.AGE);
+     }
+-}
++
++    // purpur-port start
++    @Override
++    public boolean isValidBonemealTarget(final net.minecraft.world.level.LevelReader world, final BlockPos pos, final BlockState state) {
++        return io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.netherWartAffectedByBonemeal
++            && state.getValue(NetherWartBlock.AGE) < 3;
++    }
++
++    @Override
++    public boolean isBonemealSuccess(net.minecraft.world.level.Level world, RandomSource random, BlockPos pos, BlockState state) {
++        return true;
++    }
++
++    @Override
++    public void performBonemeal(ServerLevel world, RandomSource random, BlockPos pos, BlockState state) {
++        int i = Math.min(3, state.getValue(NetherWartBlock.AGE) + 1);
++        state = state.setValue(NetherWartBlock.AGE, i);
++        org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockGrowEvent(world, pos, state, 2); // CraftBukkit
++    }
++    // purpur-port end
++}
+\ No newline at end of file
