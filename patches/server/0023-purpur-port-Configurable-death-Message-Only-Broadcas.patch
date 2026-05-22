@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 09:31:08 +0800
+Subject: [PATCH] =?UTF-8?q?purpur-port:=20Configurable=20death=20Message?=
+ =?UTF-8?q?=20Only=20Broadcast=20To=20Affected=20Player=C2=A0settings?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index d381f4687d5e37cbea4ab50240b30e27b9e8738b..26060839dcaf9e92a1eb566b897d9053a46c978e 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -370,6 +370,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean beaconAllowEffectsWithTintedGlass = false;
+         @Comment("If true, chests can be opened even when a solid block is on top.")
+         public boolean chestOpenWithBlockOnTop = false;
++        @Comment("If true, death messages are only sent to the player who died instead of broadcasting to all players.")
++        public boolean deathMessageOnlyBroadcastToAffectedPlayer = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 8ee61c2415455f8d4ff1ae687753117a40eb687b..1e56932afa725ebe90e9bd6f325a0aa2217ff2c6 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -1177,6 +1177,7 @@ public class ServerPlayer extends Player {
+             }));
+             PlayerTeam scoreboardteam = this.getTeam();
+ 
++            if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.deathMessageOnlyBroadcastToAffectedPlayer) this.sendSystemMessage(ichatbasecomponent); else // purpur-port
+             if (scoreboardteam != null && scoreboardteam.getDeathMessageVisibility() != Team.Visibility.ALWAYS) {
+                 if (scoreboardteam.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OTHER_TEAMS) {
+                     this.server.getPlayerList().broadcastSystemToTeam(this, ichatbasecomponent);
+@@ -3314,4 +3315,4 @@ public class ServerPlayer extends Player {
+         return (CraftPlayer) super.getBukkitEntity();
+     }
+     // CraftBukkit end
+-}
++}
+\ No newline at end of file
