@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 14:46:35 +0800
+Subject: [PATCH] Inject ReadOnlyPlayerTeleportEvent into teleportAsync
+
+
+diff --git a/src/main/java/net/minecraft/world/entity/Entity.java b/src/main/java/net/minecraft/world/entity/Entity.java
+index fad6a7185e8e9ea160b47ec9da56d08af9df8396..705806f64a497ad124eb5749ed7347a1fb3e756b 100644
+--- a/src/main/java/net/minecraft/world/entity/Entity.java
++++ b/src/main/java/net/minecraft/world/entity/Entity.java
+@@ -4037,7 +4037,25 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             }
+         }
+ 
+-        // TODO any events that can modify go HERE
++        // Mistlen-Folia start - fire ReadOnlyPlayerTeleportEvent
++        if (this instanceof ServerPlayer serverPlayer) {
++            float resolvedYaw   = yaw   != null ? yaw   : this.getYRot();
++            float resolvedPitch = pitch != null ? pitch : this.getXRot();
++
++            org.bukkit.Location from = MCUtil.toLocation(this.level(), this.position(), this.getYRot(), this.getXRot());
++            org.bukkit.Location to   = MCUtil.toLocation(destination, pos, resolvedYaw, resolvedPitch);
++
++            java.util.Set<io.papermc.paper.entity.TeleportFlag.Relative> relativeFlags =
++                java.util.Collections.emptySet();
++
++            rice.chen.event.player.ReadOnlyPlayerTeleportEvent event =
++                new rice.chen.event.player.ReadOnlyPlayerTeleportEvent(
++                    (org.bukkit.entity.Player) serverPlayer.getBukkitEntity(),
++                    from, to, cause, relativeFlags
++                );
++            serverPlayer.getBukkitEntity().getServer().getPluginManager().callEvent(event);
++        }
++        // Mistlen-Folia end - fire ReadOnlyPlayerTeleportEvent
+ 
+         // check for same region
+         if (destination == this.level()) {
+@@ -5801,4 +5819,4 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         return ((net.minecraft.server.level.ServerChunkCache) level.getChunkSource()).isPositionTicking(this);
+     }
+     // Paper end - Expose entity id counter
+-}
++}
+\ No newline at end of file
