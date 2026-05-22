@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 22 May 2026 09:20:02 +0800
+Subject: [PATCH] purpur-port: Configurable chest Open With Block On Top
+ settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index d66b2d1f6ee23b73da6dd9d8b16d89a1bb8ca7af..d381f4687d5e37cbea4ab50240b30e27b9e8738b 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -368,6 +368,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean advancementOnlyBroadcastToAffectedPlayer = false;
+         @Comment("If true, beacon effects will apply even when the beacon beam is blocked by tinted glass.")
+         public boolean beaconAllowEffectsWithTintedGlass = false;
++        @Comment("If true, chests can be opened even when a solid block is on top.")
++        public boolean chestOpenWithBlockOnTop = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/world/level/block/ChestBlock.java b/src/main/java/net/minecraft/world/level/block/ChestBlock.java
+index 8fbfd18b3caeed769396b3ffb1b1778b2f38edc0..ee5b6a44637e25c8daa283204b62282b2368110c 100644
+--- a/src/main/java/net/minecraft/world/level/block/ChestBlock.java
++++ b/src/main/java/net/minecraft/world/level/block/ChestBlock.java
+@@ -343,6 +343,7 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements
+     }
+ 
+     public static boolean isBlockedChestByBlock(BlockGetter world, BlockPos pos) {
++        if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.chestOpenWithBlockOnTop) return false; // purpur-port
+         BlockPos blockposition1 = pos.above();
+ 
+         return world.getBlockState(blockposition1).isRedstoneConductor(world, blockposition1);
+@@ -410,4 +411,4 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements
+         }
+ 
+     }
+-}
++}
+\ No newline at end of file
