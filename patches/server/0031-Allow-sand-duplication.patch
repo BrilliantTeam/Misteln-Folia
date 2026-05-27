@@ -4,6 +4,65 @@ Date: Wed, 27 May 2026 22:35:31 +0800
 Subject: [PATCH] Allow-sand-duplication
 
 
+diff --git a/src/main/java/net/minecraft/world/entity/Entity.java b/src/main/java/net/minecraft/world/entity/Entity.java
+index 705806f64a497ad124eb5749ed7347a1fb3e756b..a51e6d561d4ad6a9b152684ae4f3f68d069a037c 100644
+--- a/src/main/java/net/minecraft/world/entity/Entity.java
++++ b/src/main/java/net/minecraft/world/entity/Entity.java
+@@ -4220,14 +4220,20 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                         targetPos, 16, // load 16 blocks to be safe from block physics
+                         ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.HIGH,
+                         (chunks) -> {
+-                            ServerLevel.makeObsidianPlatform(destination, null, targetPos);
+-
+-                            // the portal obsidian is placed at targetPos.y - 2, so if we want to place the entity
+-                            // on the obsidian, we need to spawn at targetPos.y - 1
+-                            portalInfoCompletable.complete(
+-                                new PortalInfo(Vec3.atBottomCenterOf(targetPos.below()), Vec3.ZERO, 90.0f, 0.0f, destination, null)
+-                            );
+-                        }
++                        // Misteln-Folia start - Vanilla end teleportation
++                        // ServerLevel.makeObsidianPlatform(destination, null, targetPos);
++                        Vec3 finalPos;
++                        if (this instanceof Player) finalPos = Vec3.atBottomCenterOf(targetPos.below());
++                        else finalPos = Vec3.atBottomCenterOf(targetPos);
++                        // Misteln-Folia end
++
++                        // the portal obsidian is placed at targetPos.y - 2, so if we want to place the entity
++                        // on the obsidian, we need to spawn at targetPos.y - 1
++                        portalInfoCompletable.complete(
++                            new PortalInfo(finalPos, Vec3.ZERO, 90.0f, 0.0f, destination, null) // Misteln-Folia - ZERO end teleportation
++                            //new PortalInfo(finalPos, this.getDeltaMovement(), 90.0f, 0.0f, destination, null) // Misteln-Folia - Vanilla end teleportation
++                        );
++                    }
+                     );
+                 } else {
+                     BlockPos spawnPos = destination.getSharedSpawnPos();
+@@ -4412,6 +4418,11 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+         if (!this.canPortalAsync(takePassengers)) {
+             return false;
+         }
++        // Misteln-Folia start - sync end platform spawning & entity teleportation
++        final java.util.function.Consumer<Entity> tpComplete = type == PortalType.END && destination.getTypeKey() == net.minecraft.world.level.dimension.LevelStem.END
++                        ? e -> ServerLevel.makeObsidianPlatform(destination, null, ServerLevel.END_SPAWN_POINT)
++                        : teleportComplete;
++        // Misteln-Folia end - sync end platform spawning & entity teleportation
+ 
+         Vec3 initialPosition = this.position();
+         ChunkPos initialPositionChunk = new ChunkPos(
+@@ -4468,10 +4479,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             }
+ 
+             // place
++            // Misteln-Folia start - sync end platform spawning & entity teleportation
+             passengerTree.root.placeInAsync(
+                 originWorld, destination, Entity.TELEPORT_FLAG_LOAD_CHUNK | (takePassengers ? Entity.TELEPORT_FLAG_TELEPORT_PASSENGERS : 0L),
+-                passengerTree, teleportComplete
++                passengerTree, tpComplete
+             );
++            // Misteln-Folia end - sync end platform spawning & entity teleportation
+         });
+ 
+ 
 diff --git a/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java b/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java
 index d504d10fbe45dfe3f2f3d08d2473df6cd18f6dcf..4bee79427d2d4e886bef456df030e8d2059922fd 100644
 --- a/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java

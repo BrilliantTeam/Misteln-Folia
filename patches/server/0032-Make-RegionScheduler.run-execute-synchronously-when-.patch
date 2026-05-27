@@ -1,0 +1,79 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Fri, 29 May 2026 09:09:04 +0800
+Subject: [PATCH] Make RegionScheduler.run() execute synchronously when already
+ on the correct region thread to improve MovementTask movement smoothness
+
+
+diff --git a/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaRegionScheduler.java b/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaRegionScheduler.java
+index a12705793a63b289da13ebabeaf441637c4fe2ed..d332ddfaa3c6f9bf5ec89c1546d6a10f226d62a4 100644
+--- a/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaRegionScheduler.java
++++ b/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaRegionScheduler.java
+@@ -72,6 +72,22 @@ public final class FoliaRegionScheduler implements RegionScheduler {
+ 
+     @Override
+     public ScheduledTask run(final Plugin plugin, final World world, final int chunkX, final int chunkZ, final Consumer<ScheduledTask> task) {
++        Validate.notNull(plugin, "Plugin may not be null");
++        Validate.notNull(world, "World may not be null");
++        Validate.notNull(task, "Task may not be null");
++
++        if (!plugin.isEnabled()) {
++            throw new IllegalPluginAccessException("Plugin attempted to register task while disabled");
++        }
++
++        // Misteln-Folia start - run synchronously when already on the correct region's thread
++        if (Bukkit.isOwnedByCurrentRegion(world, chunkX, chunkZ)) {
++            final LocationScheduledTask ret = new LocationScheduledTask(plugin, world, chunkX, chunkZ, -1, task);
++            ret.run();
++            return ret;
++        }
++        // Misteln-Folia end
++
+         return this.runDelayed(plugin, world, chunkX, chunkZ, task, 1);
+     }
+ 
+diff --git a/src/main/java/net/minecraft/world/entity/Entity.java b/src/main/java/net/minecraft/world/entity/Entity.java
+index a51e6d561d4ad6a9b152684ae4f3f68d069a037c..eabaaab3d848624686afe9dea625f9d10eb491e9 100644
+--- a/src/main/java/net/minecraft/world/entity/Entity.java
++++ b/src/main/java/net/minecraft/world/entity/Entity.java
+@@ -4071,15 +4071,36 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 // Note: The client does not accept position updates for controlled entities. So, we must
+                 // perform a lot of tracker updates here to make it all work out.
+ 
+-                // first, clear the tracker
+-                passengerTree.clearTracker();
++                // Misteln-Folia start - skip tracker clear/add for non-controlled entities
++                // For entities controlled by a player (e.g. ridden vehicles), the client ignores server
++                // position updates, so we must force a re-spawn via clearTracker/addTracker.
++                // For non-controlled entities (e.g. armor stands), skipping this allows the tracker to
++                // send relative MoveEntity packets instead of absolute Teleport/Spawn packets,
++                // enabling smooth client-side interpolation (matches Paper sync-teleport behaviour).
++                boolean needsTrackerReset = false;
++                for (EntityTreeNode node : passengerTree.getFullTree()) {
++                    if (node.root.getControllingPassenger() instanceof net.minecraft.server.level.ServerPlayer) {
++                        needsTrackerReset = true;
++                        break;
++                    }
++                }
++
++                // first, clear the tracker (only when a player-controlled entity is involved)
++                if (needsTrackerReset) {
++                    passengerTree.clearTracker();
++                }
++                // Misteln-Folia end
+                 for (EntityTreeNode entity : passengerTree.getFullTree()) {
+                     entity.root.teleportSyncSameRegion(pos, yaw, pitch, speedDirectionUpdate);
+                 }
+ 
+                 passengerTree.restore();
+-                // re-add to the tracker once the tree is restored
+-                passengerTree.addTracker();
++                // re-add to the tracker once the tree is restored (only when needed)
++                // Misteln-Folia start
++                if (needsTrackerReset) {
++                    passengerTree.addTracker();
++                }
++                // Misteln-Folia end
+ 
+                 // adjust entities to final position
+                 passengerTree.adjustRiders(true);
