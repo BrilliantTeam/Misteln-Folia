@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Wed, 27 May 2026 22:35:31 +0800
+Subject: [PATCH] Allow-sand-duplication
+
+
+diff --git a/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java b/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java
+index d504d10fbe45dfe3f2f3d08d2473df6cd18f6dcf..4bee79427d2d4e886bef456df030e8d2059922fd 100644
+--- a/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java
++++ b/src/main/java/net/minecraft/world/entity/item/FallingBlockEntity.java
+@@ -66,6 +66,7 @@ public class FallingBlockEntity extends Entity {
+     public float fallDamagePerDistance;
+     @Nullable
+     public CompoundTag blockData;
++    public boolean forceTickAfterTeleportToDuplicate = true; // Misteln-Folia - Allow sand duplication
+     protected static final EntityDataAccessor<BlockPos> DATA_START_POS = SynchedEntityData.defineId(FallingBlockEntity.class, EntityDataSerializers.BLOCK_POS);
+     public boolean autoExpire = true; // Paper - Expand FallingBlock API
+ 
+@@ -405,4 +406,4 @@ public class FallingBlockEntity extends Entity {
+         this.setPos(d0, d1, d2);
+         this.setStartPos(this.blockPosition());
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/world/level/block/EndPortalBlock.java b/src/main/java/net/minecraft/world/level/block/EndPortalBlock.java
+index aeac09f628bd04070fd302842c304a7dfd39b229..974eec81652c910e13e54a7d168cd7f6b97be777 100644
+--- a/src/main/java/net/minecraft/world/level/block/EndPortalBlock.java
++++ b/src/main/java/net/minecraft/world/level/block/EndPortalBlock.java
+@@ -61,6 +61,13 @@ public class EndPortalBlock extends BaseEntityBlock {
+                 // return; // CraftBukkit - always fire event in case plugins wish to change it
+             }
+ 
++            // Misteln-Folia start - async teleportation
++            if (!(entity instanceof net.minecraft.world.entity.player.Player)) {
++                entity.endPortalLogicAsync();
++                return;
++            }
++            // Misteln-Folia end
++
+             // Paper start - move all of this logic into portal tick
+             entity.portalWorld = ((ServerLevel)world);
+             entity.portalBlock = pos.immutable();
+@@ -90,4 +97,4 @@ public class EndPortalBlock extends BaseEntityBlock {
+     protected boolean canBeReplaced(BlockState state, Fluid fluid) {
+         return false;
+     }
+-}
++}
+\ No newline at end of file
