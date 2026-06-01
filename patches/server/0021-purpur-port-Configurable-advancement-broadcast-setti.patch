@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Mon, 1 Jun 2026 15:54:23 +0800
+Subject: [PATCH] purpur-port: Configurable advancement broadcast settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index a7757603bef0686b3f0debe4a94602f27373534f..7e624f6b72a231ccd044c052674db000600da685 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -378,4 +378,13 @@ public class GlobalConfiguration extends ConfigurationPart {
+         }
+     }
+     // Folia end - threaded regions
++    // purpur-port start
++    public PurpurPort purpurPort;
++
++    public class PurpurPort extends ConfigurationPart {
++        @Comment("If true, advancement completion messages are only sent to the player who earned the advancement instead of broadcasting to all players.")
++        public boolean advancementOnlyBroadcastToAffectedPlayer = false;
++    }
++    // purpur-port end
++
+ }
+diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
+index 862a4bf003b7f810fb57dbcd150a1417c902b633..fe66ba9439b060790a4ac564f15df1282e1759fb 100644
+--- a/src/main/java/net/minecraft/server/PlayerAdvancements.java
++++ b/src/main/java/net/minecraft/server/PlayerAdvancements.java
+@@ -249,7 +249,11 @@ public class PlayerAdvancements {
+                 advancement.value().display().ifPresent((advancementdisplay) -> {
+                     // Paper start - Add Adventure message to PlayerAdvancementDoneEvent
+                     if (event.message() != null && this.player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
++                        if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.advancementOnlyBroadcastToAffectedPlayer) { // purpur-port
++                            this.player.sendSystemMessage(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message())); // purpur-port
++                        } else { // purpur-port
+                         this.playerList.broadcastSystemMessage(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
++                        } // purpur-port
+                         // Paper end
+                     }
+ 
