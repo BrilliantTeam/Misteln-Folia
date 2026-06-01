@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Mon, 1 Jun 2026 15:56:24 +0800
+Subject: [PATCH] purpur-port: Configurable chest Open With Block On Top
+ settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 4753c216a8a752b347f8ed6006d624bc08a43b80..5b18685b7d948f5d4079ad533bc03d769a5fd7f3 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -386,6 +386,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean advancementOnlyBroadcastToAffectedPlayer = false;
+         @Comment("If true, beacon effects will apply even when the beacon beam is blocked by tinted glass.")
+         public boolean beaconAllowEffectsWithTintedGlass = false;
++        @Comment("If true, chests can be opened even when a solid block is on top.")
++        public boolean chestOpenWithBlockOnTop = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/world/level/block/ChestBlock.java b/src/main/java/net/minecraft/world/level/block/ChestBlock.java
+index 0b27baf10770cb3077c4e75da55209689d614513..3abe83af321956abc07539194a317fdb3a58a204 100644
+--- a/src/main/java/net/minecraft/world/level/block/ChestBlock.java
++++ b/src/main/java/net/minecraft/world/level/block/ChestBlock.java
+@@ -342,6 +342,7 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements
+     }
+ 
+     public static boolean isBlockedChestByBlock(BlockGetter world, BlockPos pos) {
++        if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.chestOpenWithBlockOnTop) return false; // purpur-port
+         BlockPos blockposition1 = pos.above();
+ 
+         return world.getBlockState(blockposition1).isRedstoneConductor(world, blockposition1);
