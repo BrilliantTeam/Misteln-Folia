@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Mon, 1 Jun 2026 16:03:25 +0800
+Subject: [PATCH] Inject ReadOnlyPlayerTeleportEvent into teleportAsync
+
+
+diff --git a/src/main/java/net/minecraft/world/entity/Entity.java b/src/main/java/net/minecraft/world/entity/Entity.java
+index 2ccc358daae43dcebf03db64526f17fbd9df23f8..52be3ba98095eaf11db9c26afabf950742beee93 100644
+--- a/src/main/java/net/minecraft/world/entity/Entity.java
++++ b/src/main/java/net/minecraft/world/entity/Entity.java
+@@ -4074,7 +4074,25 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             }
+         }
+ 
+-        // TODO any events that can modify go HERE
++        // Mistlen-Folia start - fire ReadOnlyPlayerTeleportEvent
++        if (this instanceof ServerPlayer serverPlayer) {
++            float resolvedYaw   = yaw   != null ? yaw   : this.getYRot();
++            float resolvedPitch = pitch != null ? pitch : this.getXRot();
++
++            org.bukkit.Location from = MCUtil.toLocation(this.level(), this.position(), this.getYRot(), this.getXRot());
++            org.bukkit.Location to   = MCUtil.toLocation(destination, pos, resolvedYaw, resolvedPitch);
++
++            java.util.Set<io.papermc.paper.entity.TeleportFlag.Relative> relativeFlags =
++                java.util.Collections.emptySet();
++
++            rice.chen.event.player.ReadOnlyPlayerTeleportEvent event =
++                new rice.chen.event.player.ReadOnlyPlayerTeleportEvent(
++                    (org.bukkit.entity.Player) serverPlayer.getBukkitEntity(),
++                    from, to, cause, relativeFlags
++                );
++            serverPlayer.getBukkitEntity().getServer().getPluginManager().callEvent(event);
++        }
++        // Mistlen-Folia end - fire ReadOnlyPlayerTeleportEvent
+ 
+         // check for same region
+         if (destination == this.level()) {
