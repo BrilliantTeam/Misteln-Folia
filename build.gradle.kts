@@ -51,7 +51,7 @@ subprojects {
 }
 
 paperweight {
-    serverProject.set(project(":folia-server"))
+    serverProject.set(project(":misteln-folia-server"))
 
     remapRepo.set(paperMavenPublicUrl)
     decompileRepo.set(paperMavenPublicUrl)
@@ -59,10 +59,10 @@ paperweight {
     usePaperUpstream(providers.gradleProperty("paperRef")) {
         withPaperPatcher {
             apiPatchDir.set(layout.projectDirectory.dir("patches/api"))
-            apiOutputDir.set(layout.projectDirectory.dir("Folia-API"))
+            apiOutputDir.set(layout.projectDirectory.dir("Misteln-Folia-API"))
 
             serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
-            serverOutputDir.set(layout.projectDirectory.dir("Folia-Server"))
+            serverOutputDir.set(layout.projectDirectory.dir("Misteln-Folia-Server"))
         }
         patchTasks.register("generatedApi") {
             isBareDirectory = true
@@ -74,7 +74,7 @@ paperweight {
 }
 
 tasks.generateDevelopmentBundle {
-    apiCoordinates.set("dev.folia:folia-api")
+    apiCoordinates.set("BrilliantTeam.Misteln.Folia:misteln-folia-api")
     libraryRepositories.addAll(
         "https://repo.maven.apache.org/maven2/",
         paperMavenPublicUrl,
