@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Mon, 1 Jun 2026 15:59:38 +0800
+Subject: [PATCH] purpur-port: Configurable player Sleep Near Monsters settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 0bd15bd894673ddf9735b28cc8e5318478b58f21..6e418bff4df9a9a5a392168e36b596e6501b5a09 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -394,6 +394,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean minecartPlaceAnywhere = false;
+         @Comment("If true, nether wart can be grown by using bone meal.")
+         public boolean netherWartAffectedByBonemeal = false;
++        @Comment("If true, players can sleep even when monsters are nearby.")
++        public boolean playerSleepNearMonsters = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 72300ad7e7b99199967ca8d204265d69d7354bff..313f5737384346023d200decbd20744d4d6b9140 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -1980,7 +1980,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+                             return entitymonster.isPreventingPlayerRest(this);
+                         });
+ 
+-                        if (!list.isEmpty()) {
++                        if (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.playerSleepNearMonsters && !list.isEmpty()) { // purpur-port
+                             return Either.left(net.minecraft.world.entity.player.Player.BedSleepingProblem.NOT_SAFE);
+                         }
+                     }
