@@ -6,9 +6,20 @@ Subject: [PATCH] Smooth same-region teleport for non-player-controlled
 
 
 diff --git a/src/main/java/net/minecraft/world/entity/Entity.java b/src/main/java/net/minecraft/world/entity/Entity.java
-index ab9a429afb30be161e63bbbd07193e1d43ffcbbb..1ff7109538c67b77c6dedcdae79b8b7c28a4dc13 100644
+index ab9a429afb30be161e63bbbd07193e1d43ffcbbb..9d4e5bc82de421708edece20e8a88a38812dc6cd 100644
 --- a/src/main/java/net/minecraft/world/entity/Entity.java
 +++ b/src/main/java/net/minecraft/world/entity/Entity.java
+@@ -4079,8 +4079,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+             float resolvedYaw   = yaw   != null ? yaw   : this.getYRot();
+             float resolvedPitch = pitch != null ? pitch : this.getXRot();
+ 
+-            org.bukkit.Location from = MCUtil.toLocation(this.level(), this.position(), this.getYRot(), this.getXRot());
+-            org.bukkit.Location to   = MCUtil.toLocation(destination, pos, resolvedYaw, resolvedPitch);
++            org.bukkit.Location from = io.papermc.paper.util.MCUtil.toLocation(this.level(), this.position(), this.getYRot(), this.getXRot());
++            org.bukkit.Location to   = io.papermc.paper.util.MCUtil.toLocation(destination, pos, resolvedYaw, resolvedPitch);
+ 
+             java.util.Set<io.papermc.paper.entity.TeleportFlag.Relative> relativeFlags =
+                 java.util.Collections.emptySet();
 @@ -4108,15 +4108,36 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
                  // Note: The client does not accept position updates for controlled entities. So, we must
                  // perform a lot of tracker updates here to make it all work out.
