@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 2 Jun 2026 01:21:37 +0800
+Subject: [PATCH] capturedTileEntities null
+
+
+diff --git a/src/main/java/net/minecraft/world/level/Level.java b/src/main/java/net/minecraft/world/level/Level.java
+index 3e739362046d624dd46412f7c50a7220d26593cf..30fd5a57b2b701683c901c31a9f910b8669b1926 100644
+--- a/src/main/java/net/minecraft/world/level/Level.java
++++ b/src/main/java/net/minecraft/world/level/Level.java
+@@ -1408,7 +1408,8 @@ public abstract class Level implements LevelAccessor, AutoCloseable, ca.spottedl
+     }
+ 
+     public void addBlockEntityTicker(TickingBlockEntity ticker) {
+-        ((ServerLevel)this).getCurrentWorldData().addBlockEntityTicker(ticker); // Folia - regionised ticking
++        final io.papermc.paper.threadedregions.RegionizedWorldData worldData = ((ServerLevel)this).getCurrentWorldData();
++        if (worldData != null) worldData.addBlockEntityTicker(ticker); // Folia - regionised ticking
+     }
+ 
+     protected void tickBlockEntities() {
+diff --git a/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java b/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java
+index ea95a382561dcf2bb958a08351d493087a49336a..6109614b5cba33edb3b2aa0c5030138ba0fe7aec 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java
++++ b/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java
+@@ -461,20 +461,25 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
+     @Nullable
+     public BlockEntity getBlockEntity(BlockPos pos, LevelChunk.EntityCreationType creationType) {
+         // CraftBukkit start
+-        BlockEntity tileentity = this.level.getCurrentWorldData().capturedTileEntities.get(pos); // Folia - region threading
++        final io.papermc.paper.threadedregions.RegionizedWorldData _worldData = this.level.getCurrentWorldData(); // Folia - region threading
++        BlockEntity tileentity = _worldData != null ? _worldData.capturedTileEntities.get(pos) : null;
+         if (tileentity == null) {
+             tileentity = (BlockEntity) this.blockEntities.get(pos);
+         }
+         // CraftBukkit end
+ 
+         if (tileentity == null) {
+-            CompoundTag nbttagcompound = (CompoundTag) this.pendingBlockEntities.remove(pos);
++            // Folia: promotePendingBlockEntity requires region thread (calls addBlockEntityTicker).
++            // Skip promotion when not on region thread to avoid NPE; data stays in pendingBlockEntities.
++            if (_worldData != null) {
++                CompoundTag nbttagcompound = (CompoundTag) this.pendingBlockEntities.remove(pos);
+ 
+-            if (nbttagcompound != null) {
+-                BlockEntity tileentity1 = this.promotePendingBlockEntity(pos, nbttagcompound);
++                if (nbttagcompound != null) {
++                    BlockEntity tileentity1 = this.promotePendingBlockEntity(pos, nbttagcompound);
+ 
+-                if (tileentity1 != null) {
+-                    return tileentity1;
++                    if (tileentity1 != null) {
++                        return tileentity1;
++                    }
+                 }
+             }
+         }
