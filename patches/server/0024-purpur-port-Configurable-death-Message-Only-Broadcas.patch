@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Mon, 1 Jun 2026 15:57:16 +0800
+Subject: [PATCH] purpur-port: Configurable death Message Only Broadcast To
+ Affected Player settings
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 5b18685b7d948f5d4079ad533bc03d769a5fd7f3..d633fbac530a6d5dbaeebb668ee5ca1b9e647091 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -388,6 +388,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean beaconAllowEffectsWithTintedGlass = false;
+         @Comment("If true, chests can be opened even when a solid block is on top.")
+         public boolean chestOpenWithBlockOnTop = false;
++        @Comment("If true, death messages are only sent to the player who died instead of broadcasting to all players.")
++        public boolean deathMessageOnlyBroadcastToAffectedPlayer = false;
+     }
+     // purpur-port end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index e4a68f43c1a48fe8193623c646eb40bc5f664c76..72300ad7e7b99199967ca8d204265d69d7354bff 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -1215,6 +1215,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+             }));
+             PlayerTeam scoreboardteam = this.getTeam();
+ 
++            if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.deathMessageOnlyBroadcastToAffectedPlayer) this.sendSystemMessage(ichatbasecomponent); else // purpur-port
+             if (scoreboardteam != null && scoreboardteam.getDeathMessageVisibility() != Team.Visibility.ALWAYS) {
+                 if (scoreboardteam.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OTHER_TEAMS) {
+                     this.server.getPlayerList().broadcastSystemToTeam(this, ichatbasecomponent);
