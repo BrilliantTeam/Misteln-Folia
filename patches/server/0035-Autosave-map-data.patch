@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sun, 28 Jun 2026 22:29:58 +0800
+Subject: [PATCH] Autosave map data
+
+
+diff --git a/src/main/java/io/papermc/paper/threadedregions/RegionizedServer.java b/src/main/java/io/papermc/paper/threadedregions/RegionizedServer.java
+index 1d41a6a204068122daa1b5b2cd7541bfeae52f4c..63c5ba4ce7929f62acbf555fd7fdac96235216de 100644
+--- a/src/main/java/io/papermc/paper/threadedregions/RegionizedServer.java
++++ b/src/main/java/io/papermc/paper/threadedregions/RegionizedServer.java
+@@ -418,7 +418,25 @@ public final class RegionizedServer {
+         world.updateTickData();
+ 
+         world.moonrise$getChunkTaskScheduler().chunkHolderManager.processTicketUpdates(); // required to eventually process ticket updates
++
++        // autosave maps
++        this.autoSaveMaps(world);
++    }
++
++    // Folia start - autosave map data
++    private void autoSaveMaps(final ServerLevel world) {
++        final int autosavePeriod = MinecraftServer.getServer().autosavePeriod;
++        if (autosavePeriod <= 0) {
++            return;
++        }
++        final long currTime = System.nanoTime();
++        if ((currTime - world.lastMapAutoSave) < ((long)autosavePeriod * (1_000_000_000L / 20L))) {
++            return;
++        }
++        world.lastMapAutoSave = currTime;
++        world.getDataStorage().saveMaps();
+     }
++    // Folia end - autosave map data
+ 
+     private void updateRaids(final ServerLevel world) {
+         world.getRaids().globalTick();
+diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
+index 90d78ddf8518c0df307cdaa8b7cfb5549491c6e5..ea47e56c9f1f992efab76ddd543caa79648e7031 100644
+--- a/src/main/java/net/minecraft/server/level/ServerLevel.java
++++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
+@@ -221,6 +221,7 @@ public class ServerLevel extends Level implements WorldGenLevel, ca.spottedleaf.
+     private final StructureManager structureManager;
+     private final StructureCheck structureCheck;
+     public final boolean tickTime; // Folia - region threading
++    public long lastMapAutoSave = System.nanoTime(); // Folia - autosave map data
+     private final RandomSequences randomSequences;
+ 
+     // CraftBukkit start
+diff --git a/src/main/java/net/minecraft/world/level/storage/DimensionDataStorage.java b/src/main/java/net/minecraft/world/level/storage/DimensionDataStorage.java
+index 2c086f1d4cbfc29a759a77e5c5f9f39d177e81ba..90d1eae439ef41f3e2615fc5e3537d6e61aa5239 100644
+--- a/src/main/java/net/minecraft/world/level/storage/DimensionDataStorage.java
++++ b/src/main/java/net/minecraft/world/level/storage/DimensionDataStorage.java
+@@ -151,4 +151,19 @@ public class DimensionDataStorage implements java.io.Closeable { // Paper - Writ
+             }
+         });
+     }
++
++    // Folia start - autosave map data
++    public void saveMaps() {
++        synchronized (this.cache) {
++            for (final Map.Entry<String, SavedData> entry : this.cache.entrySet()) {
++                final SavedData state = entry.getValue();
++                if (!(state instanceof net.minecraft.world.level.saveddata.maps.MapItemSavedData) &&
++                    !(state instanceof net.minecraft.world.level.saveddata.maps.MapIndex)) {
++                    continue;
++                }
++                state.save(this.getDataFile(entry.getKey()), this.registries, this.ioExecutor);
++            }
++        }
++    }
++    // Folia end - autosave map data
+ }
