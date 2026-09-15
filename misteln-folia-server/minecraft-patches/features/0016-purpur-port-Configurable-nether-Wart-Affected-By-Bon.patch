@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:57 +0800
+Subject: [PATCH] purpur-port: Configurable nether Wart Affected By Bonemeal
+ settings
+
+
+diff --git a/net/minecraft/world/level/block/NetherWartBlock.java b/net/minecraft/world/level/block/NetherWartBlock.java
+index 52891ddc14ad0e6f46a2f13d044723de9960b42d..4094f471da2779e191a3b45a8313489ff86f02ca 100644
+--- a/net/minecraft/world/level/block/NetherWartBlock.java
++++ b/net/minecraft/world/level/block/NetherWartBlock.java
+@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+-public class NetherWartBlock extends BushBlock {
++public class NetherWartBlock extends BushBlock implements BonemealableBlock { // purpur-port
+     public static final MapCodec<NetherWartBlock> CODEC = simpleCodec(NetherWartBlock::new);
+     public static final int MAX_AGE = 3;
+     public static final IntegerProperty AGE = BlockStateProperties.AGE_3;
+@@ -70,4 +70,23 @@ public class NetherWartBlock extends BushBlock {
+     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+         builder.add(AGE);
+     }
++
++    // purpur-port start
++    @Override
++    public boolean isValidBonemealTarget(final net.minecraft.world.level.LevelReader world, final BlockPos pos, final BlockState state) {
++        return io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.netherWartAffectedByBonemeal && state.getValue(NetherWartBlock.AGE) < 3;
++    }
++
++    @Override
++    public boolean isBonemealSuccess(net.minecraft.world.level.Level world, RandomSource random, BlockPos pos, BlockState state) {
++        return true;
++    }
++
++    @Override
++    public void performBonemeal(ServerLevel world, RandomSource random, BlockPos pos, BlockState state) {
++        int i = Math.min(3, state.getValue(NetherWartBlock.AGE) + 1);
++        state = state.setValue(NetherWartBlock.AGE, i);
++        org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockGrowEvent(world, pos, state, 2); // CraftBukkit
++    }
++    // purpur-port end
+ }

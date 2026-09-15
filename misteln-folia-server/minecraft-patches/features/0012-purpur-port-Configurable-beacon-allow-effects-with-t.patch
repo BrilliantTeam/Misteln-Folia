@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:57 +0800
+Subject: [PATCH] purpur-port: Configurable beacon allow effects with tinted
+ glass settings
+
+
+diff --git a/net/minecraft/world/level/block/entity/BeaconBlockEntity.java b/net/minecraft/world/level/block/entity/BeaconBlockEntity.java
+index 413288e4a654b5ff8cc009b401d602731f63ec6d..7aef799b82205216a58505ceeaaa2ef0e8bb6a94 100644
+--- a/net/minecraft/world/level/block/entity/BeaconBlockEntity.java
++++ b/net/minecraft/world/level/block/entity/BeaconBlockEntity.java
+@@ -65,6 +65,7 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
+     private List<BeaconBlockEntity.BeaconBeamSection> checkingBeamSections = Lists.newArrayList();
+     public int levels;
+     private int lastCheckY;
++    private boolean checkingTintedGlass = false; // purpur-port - Fix shading glass and beacon
+     @Nullable
+     public Holder<MobEffect> primaryPower;
+     @Nullable
+@@ -172,6 +173,7 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
+             blockPos = pos;
+             blockEntity.checkingBeamSections = Lists.newArrayList();
+             blockEntity.lastCheckY = pos.getY() - 1;
++            blockEntity.checkingTintedGlass = false; // purpur-port - Fix shading glass and beacon
+         } else {
+             blockPos = new BlockPos(x, blockEntity.lastCheckY + 1, z);
+         }
+@@ -197,7 +199,11 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
+                     }
+                 }
+             } else {
+-                if (beaconBeamSection == null || blockState.getLightBlock() >= 15 && !blockState.is(Blocks.BEDROCK)) {
++                boolean isTintedGlassBlock = io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.beaconAllowEffectsWithTintedGlass && blockState.getBlock().equals(Blocks.TINTED_GLASS); // purpur-port - beacon allow effects with tinted glass
++                if (isTintedGlassBlock) {
++                    blockEntity.checkingTintedGlass = true; // purpur-port - Fix shading glass and beacon
++                }
++                if (beaconBeamSection == null || (!isTintedGlassBlock && blockState.getLightBlock() >= 15 && !blockState.is(Blocks.BEDROCK))) { // purpur-port - beacon allow effects with tinted glass
+                     blockEntity.checkingBeamSections.clear();
+                     blockEntity.lastCheckY = height;
+                     break;
+@@ -216,7 +222,7 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
+                 blockEntity.levels = updateBase(level, x, y, z);
+             }
+ 
+-            if (blockEntity.levels > 0 && !blockEntity.beamSections.isEmpty()) {
++            if (blockEntity.levels > 0 && (!blockEntity.beamSections.isEmpty() || (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.beaconAllowEffectsWithTintedGlass && blockEntity.checkingTintedGlass))) { // purpur-port - beacon allow effects with tinted glass
+                 applyEffects(level, pos, blockEntity.levels, blockEntity.primaryPower, blockEntity.secondaryPower, blockEntity); // Paper - Custom beacon ranges
+                 playSound(level, pos, SoundEvents.BEACON_AMBIENT);
+             }

@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:57 +0800
+Subject: [PATCH] purpur-port: Configurable advancement broadcast settings
+
+
+diff --git a/net/minecraft/server/PlayerAdvancements.java b/net/minecraft/server/PlayerAdvancements.java
+index 2a60512bcf922e1356d7de0e4fce337c46d1315b..75a5110f76fa717fca4a06f48aba879298022581 100644
+--- a/net/minecraft/server/PlayerAdvancements.java
++++ b/net/minecraft/server/PlayerAdvancements.java
+@@ -195,6 +195,7 @@ public class PlayerAdvancements {
+                 advancement.value().display().ifPresent(displayInfo -> {
+                     // Paper start - Add Adventure message to PlayerAdvancementDoneEvent
+                     if (event.message() != null && this.player.serverLevel().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
++                        if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.advancementOnlyBroadcastToAffectedPlayer) this.player.sendSystemMessage(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message())); else // purpur-port
+                         this.playerList.broadcastSystemMessage(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
+                         // Paper end
+                     }

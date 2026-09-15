@@ -1,0 +1,95 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:08:06 +0800
+Subject: [PATCH] feat(dfu): handle attribute modifier and entity attribute
+ 1.20.5/6 to 1.21 upgrade
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+index 4ed7052f23ff3d9f92258ca71ba15fb2a29cf463..ecc50008922d591240e685556f943449c89354c8 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+@@ -201,11 +201,56 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
+             this.blockEntityTag = CustomData.of(tag.getCompound(CraftMetaBlockState.BLOCK_ENTITY_TAG_CUSTOM_DATA.NBT));
+         }
+         if (tag.contains(CraftMetaBlockState.BLOCK_ENTITY_COMPONENTS.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND)) {
+-            this.components = DataComponentMap.CODEC.parse(org.bukkit.craftbukkit.CraftRegistry.getMinecraftRegistry().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag.getCompound(CraftMetaBlockState.BLOCK_ENTITY_COMPONENTS.NBT)).getOrThrow();
++            // Misteln start - upgrade attribute modifiers before codec parse (1.20.5/6 -> 1.21)
++            CompoundTag componentsTag = tag.getCompound(CraftMetaBlockState.BLOCK_ENTITY_COMPONENTS.NBT);
++            upgradeAttributeModifiersInComponents(componentsTag);
++            // Misteln end
++            this.components = DataComponentMap.CODEC.parse(org.bukkit.craftbukkit.CraftRegistry.getMinecraftRegistry().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), componentsTag).getOrThrow();
+         }
+         // Paper end - new serialization format
+     }
+ 
++    // Misteln start - upgrade attribute modifiers in component map before codec parse (1.20.5/6 -> 1.21)
++    private static void upgradeAttributeModifiersInComponents(CompoundTag components) {
++        if (components.contains("minecraft:attribute_modifiers", CraftMagicNumbers.NBT.TAG_COMPOUND)) {
++            CompoundTag attrMods = components.getCompound("minecraft:attribute_modifiers");
++            if (attrMods.contains("modifiers", CraftMagicNumbers.NBT.TAG_LIST)) {
++                upgradeModifierEntries(attrMods.getList("modifiers", CraftMagicNumbers.NBT.TAG_COMPOUND));
++            }
++        }
++        if (components.contains("minecraft:container", CraftMagicNumbers.NBT.TAG_LIST)) {
++            net.minecraft.nbt.ListTag container = components.getList("minecraft:container", CraftMagicNumbers.NBT.TAG_COMPOUND);
++            for (int i = 0; i < container.size(); i++) {
++                CompoundTag entry = container.getCompound(i);
++                if (entry.contains("item", CraftMagicNumbers.NBT.TAG_COMPOUND)) {
++                    CompoundTag item = entry.getCompound("item");
++                    if (item.contains("components", CraftMagicNumbers.NBT.TAG_COMPOUND)) {
++                        upgradeAttributeModifiersInComponents(item.getCompound("components"));
++                    }
++                }
++            }
++        }
++    }
++
++    private static void upgradeModifierEntries(net.minecraft.nbt.ListTag modifiers) {
++        for (int i = 0; i < modifiers.size(); i++) {
++            CompoundTag mod = modifiers.getCompound(i);
++            if (!mod.contains("id") && (mod.contains("uuid", CraftMagicNumbers.NBT.TAG_INT_ARRAY) || mod.contains("name", CraftMagicNumbers.NBT.TAG_STRING))) {
++                if (mod.contains("uuid", CraftMagicNumbers.NBT.TAG_INT_ARRAY)) {
++                    try {
++                        java.util.UUID uuid = net.minecraft.nbt.NbtUtils.loadUUID(mod.get("uuid"));
++                        mod.putString("id", "minecraft:" + uuid.toString());
++                    } catch (Exception ignored) {}
++                    mod.remove("uuid");
++                } else {
++                    mod.putString("id", "minecraft:" + mod.getString("name"));
++                }
++                mod.remove("name");
++            }
++        }
++    }
++    // Misteln end
++
+     @Override
+     void serializeInternal(final Map<String, Tag> internalTags) {
+         // Paper start - new serialization format
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
+index 7d85c554e4e5df49d4965dbed9c112b86cd70727..5323e087ab5789c1f1dd3b5769d69a44764d8932 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
+@@ -854,6 +854,21 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
+                 // entry is not an actual NBTTagCompound. getCompound returns empty NBTTagCompound in that case
+                 continue;
+             }
++            // Misteln start - attribute modifier id upgrade (1.20.5/6 -> 1.21)
++            if (!entry.contains("id") && (entry.contains("uuid", CraftMagicNumbers.NBT.TAG_INT_ARRAY) || entry.contains("name", CraftMagicNumbers.NBT.TAG_STRING))) {
++                entry = entry.copy();
++                if (entry.contains("uuid", CraftMagicNumbers.NBT.TAG_INT_ARRAY)) {
++                    try {
++                        java.util.UUID uuid = net.minecraft.nbt.NbtUtils.loadUUID(entry.get("uuid"));
++                        entry.putString("id", "minecraft:" + uuid.toString());
++                    } catch (Exception ignored) {}
++                    entry.remove("uuid");
++                } else {
++                    entry.putString("id", "minecraft:" + entry.getString("name"));
++                }
++                entry.remove("name");
++            }
++            // Misteln end
+             net.minecraft.world.entity.ai.attributes.AttributeModifier nmsModifier = net.minecraft.world.entity.ai.attributes.AttributeModifier.load(entry);
+             if (nmsModifier == null) {
+                 continue;

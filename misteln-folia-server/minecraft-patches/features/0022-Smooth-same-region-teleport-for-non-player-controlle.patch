@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:58 +0800
+Subject: [PATCH] Smooth same-region teleport for non-player-controlled
+ entities
+
+
+diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
+index 77dba964a62fc318b2bd84f8bea94a4f56e04714..05312a0562d6cea3cf6032a9dbf797bbb4553dc2 100644
+--- a/net/minecraft/world/entity/Entity.java
++++ b/net/minecraft/world/entity/Entity.java
+@@ -4154,9 +4154,18 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 )
+             ) {
+                 boolean hasPassengers = !this.passengers.isEmpty();
++                // Misteln-Folia start - skip tracker clear/add for non-controlled entities
++                // For entities controlled by a player (e.g. ridden vehicles), the client ignores server
++                // position updates, so we must force a re-spawn via clearTracker/addTracker.
++                // For non-controlled entities (e.g. armor stands carrying passengers), skipping this allows the tracker to
++                // send relative MoveEntity packets instead of absolute Teleport/Spawn packets,
++                // enabling smooth client-side interpolation (matches Paper sync-teleport behaviour).
++                // Must be checked before the passengers are detached.
++                boolean needsTrackerReset = hasPassengers && this.getSelfAndPassengers().anyMatch(entity -> entity.getControllingPassenger() instanceof ServerPlayer);
++                // Misteln-Folia end
+                 EntityTreeNode passengerTree = this.detachPassengers();
+ 
+-                if (hasPassengers) {
++                if (needsTrackerReset) { // Misteln-Folia
+                     // Note: The client does not accept position updates for controlled entities. So, we must
+                     // perform a lot of tracker updates here to make it all work out.
+ 
+@@ -4171,7 +4180,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+                 if (hasPassengers) {
+                     passengerTree.restore();
+                     // re-add to the tracker once the tree is restored
+-                    passengerTree.addTracker();
++                    if (needsTrackerReset) passengerTree.addTracker(); // Misteln-Folia
+ 
+                     // adjust entities to final position
+                     passengerTree.adjustRiders(true);
