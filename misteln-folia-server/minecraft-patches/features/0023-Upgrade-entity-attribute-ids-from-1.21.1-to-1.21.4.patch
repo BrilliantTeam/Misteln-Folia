@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:11:55 +0800
+Subject: [PATCH] Upgrade entity attribute ids from 1.21.1 to 1.21.4
+
+
+diff --git a/net/minecraft/world/entity/ai/attributes/AttributeInstance.java b/net/minecraft/world/entity/ai/attributes/AttributeInstance.java
+index c3667006863f11203253b49cd4543a99381c7ee4..3ff646017d31bd807c8dcacae29272d1ccd769aa 100644
+--- a/net/minecraft/world/entity/ai/attributes/AttributeInstance.java
++++ b/net/minecraft/world/entity/ai/attributes/AttributeInstance.java
+@@ -226,9 +226,28 @@ public class AttributeInstance {
+             if (modifiers.isPresent()) {
+                 attribute = attribute.set("modifiers", attribute.createList(modifiers.get().map(Packed::upgradeLegacyModifier)));
+             }
++            // attribute ids lost their generic./horse./player./zombie. prefix in 1.21.2 (see V4055)
++            final java.util.Optional<String> id = attribute.get("id").asString().result();
++            if (id.isPresent()) {
++                attribute = attribute.set("id", attribute.createString(upgradeAttributeId(id.get())));
++            }
+             return attribute;
+         }
+ 
++        private static final String[] LEGACY_ATTRIBUTE_PREFIXES = {"generic.", "horse.", "player.", "zombie."};
++
++        private static String upgradeAttributeId(final String id) {
++            final ResourceLocation location = ResourceLocation.tryParse(id);
++            if (location != null && location.getNamespace().equals(ResourceLocation.DEFAULT_NAMESPACE)) {
++                for (final String prefix : LEGACY_ATTRIBUTE_PREFIXES) {
++                    if (location.getPath().startsWith(prefix)) {
++                        return ResourceLocation.withDefaultNamespace(location.getPath().substring(prefix.length())).toString();
++                    }
++                }
++            }
++            return id;
++        }
++
+         private static <T> com.mojang.serialization.Dynamic<T> upgradeLegacyModifier(com.mojang.serialization.Dynamic<T> modifier) {
+             final com.mojang.serialization.Dynamic<T> legacy = modifier;
+             if (legacy.get("id").result().isEmpty()) {

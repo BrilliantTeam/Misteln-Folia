@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:17:55 +0800
+Subject: [PATCH] fix: remove Folia UnsupportedOperationException guard in
+ registerNewTeam
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java
+index b959fe4311fc6cbae3dcc052ef4710f8c8aefec6..8c9bf52b5fd888af12ed4350807dea30cc7c86b5 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java
++++ b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java
+@@ -178,7 +178,6 @@ public final class CraftScoreboard implements org.bukkit.scoreboard.Scoreboard {
+ 
+     @Override
+     public Team registerNewTeam(String name) {
+-        if (true) throw new UnsupportedOperationException(); // Folia - not supported yet
+         Preconditions.checkArgument(name != null, "Team name cannot be null");
+         Preconditions.checkArgument(name.length() <= Short.MAX_VALUE, "Team name '%s' is longer than the limit of 32767 characters (%s)", name, name.length());
+         Preconditions.checkArgument(this.getHandle().getPlayerTeam(name) == null, "Team name '%s' is already in use", name);

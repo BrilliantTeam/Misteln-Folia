@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: skyouo0727 <skyouo@skyouo.engineer>
+Date: Tue, 15 Sep 2026 12:06:28 +0800
+Subject: [PATCH] Handle block state item meta upgrade
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+index a0a9b1c4f1eaba1add608760b91fec8d2e1976f7..f0e04bf3007bdbe968a06707676b43536b56ce9b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+@@ -140,7 +140,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
+         this.material = material != null ? material : Material.AIR;
+         if (this.internalTag != null) {
+             this.setBlockState(CraftMetaBlockState.getBlockState(this.material, this.internalTag)); // Paper - general item meta fixes - pass through setter
+-            this.internalTag = null;
++            // this.internalTag = null; // Misteln - delay removal for dfu
+         }
+         // Paper start - general item meta fixes - parse spigot legacy position and merge into block entity tag
+         final BlockVector legacyPosition = SerializableMeta.getObject(BlockVector.class, map, "blockPosition", true);
+@@ -230,6 +230,26 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
+         return builder;
+     }
+ 
++    // Misteln start - perform nbt upgrade
++    @Override
++    public void setVersion(int version) {
++        super.setVersion(version);
++
++        if (version < org.bukkit.Bukkit.getUnsafe().getDataVersion()) {
++            if (internalTag == null) return;
++
++            internalTag = ca.spottedleaf.dataconverter.minecraft.MCDataConverter.convertTag(ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.TILE_ENTITY, internalTag,
++                    version, org.bukkit.Bukkit.getUnsafe().getDataVersion());
++
++            deserializeInternal(internalTag, null);
++
++            this.setBlockState(CraftMetaBlockState.getBlockState(this.material, this.internalTag));
++        }
++
++        internalTag = null;
++    }
++    // Misteln end
++
+     @Override
+     int applyHash() {
+         final int original;

@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:57 +0800
+Subject: [PATCH] purpur-port: Configurable chest Open With Block On Top
+ settings
+
+
+diff --git a/net/minecraft/world/level/block/ChestBlock.java b/net/minecraft/world/level/block/ChestBlock.java
+index c4937d1b482e2ec60961bda62ad6cc155f0ce8f7..82a7ba98df84273020fe51803b66b2e04ec82ab3 100644
+--- a/net/minecraft/world/level/block/ChestBlock.java
++++ b/net/minecraft/world/level/block/ChestBlock.java
+@@ -337,6 +337,7 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements
+     }
+ 
+     public static boolean isBlockedChestByBlock(BlockGetter level, BlockPos pos) {
++        if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.chestOpenWithBlockOnTop) return false; // purpur-port
+         BlockPos blockPos = pos.above();
+         return level.getBlockState(blockPos).isRedstoneConductor(level, blockPos);
+     }
