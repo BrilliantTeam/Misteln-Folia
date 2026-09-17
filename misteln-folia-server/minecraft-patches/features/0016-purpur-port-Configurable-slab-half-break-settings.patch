@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:58 +0800
+Subject: [PATCH] purpur-port: Configurable slab half break settings
+
+
+diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
+index 3301e521a79adbc6dd76be05e69cce1c97f8697e..a541ae88208368c8de98604d2d5bd12addf11528 100644
+--- a/net/minecraft/server/level/ServerPlayerGameMode.java
++++ b/net/minecraft/server/level/ServerPlayerGameMode.java
+@@ -365,6 +365,7 @@ public class ServerPlayerGameMode {
+                 }
+                 return false;
+             }
++            if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.slabHalfBreak && this.player.isShiftKeyDown() && blockState.getBlock() instanceof net.minecraft.world.level.block.SlabBlock slabBlock && slabBlock.halfBreak(blockState, pos, this.player)) return true; // purpur-port
+         }
+         // CraftBukkit end
+ 
+diff --git a/net/minecraft/world/level/block/SlabBlock.java b/net/minecraft/world/level/block/SlabBlock.java
+index 6d7b63e9afd60ef7cf5332077b13941914a32109..bd825ea9a6205277ac8e94703a7459299acf0042 100644
+--- a/net/minecraft/world/level/block/SlabBlock.java
++++ b/net/minecraft/world/level/block/SlabBlock.java
+@@ -143,4 +143,25 @@ public class SlabBlock extends Block implements SimpleWaterloggedBlock {
+                 return false;
+         }
+     }
++
++    // purpur-port start - Break individual slabs when sneaking
++    public boolean halfBreak(BlockState state, BlockPos pos, net.minecraft.server.level.ServerPlayer player) {
++        if (state.getValue(SlabBlock.TYPE) != SlabType.DOUBLE) {
++            return false;
++        }
++        net.minecraft.world.phys.HitResult result = player.getRayTrace(16, net.minecraft.world.level.ClipContext.Fluid.NONE);
++        if (result.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
++            return false;
++        }
++        double hitY = result.getLocation().y();
++        int blockY = org.bukkit.util.NumberConversions.floor(hitY);
++        player.level().setBlock(pos, state.setValue(SlabBlock.TYPE, (hitY - blockY > 0.5 || blockY - pos.getY() == 1) ? SlabType.BOTTOM : SlabType.TOP), 3);
++        if (!player.getAbilities().instabuild) {
++            net.minecraft.world.entity.item.ItemEntity item = new net.minecraft.world.entity.item.ItemEntity(player.level(), pos.getX(), pos.getY(), pos.getZ(), new ItemStack(asItem()));
++            item.setDefaultPickUpDelay();
++            player.level().addFreshEntity(item);
++        }
++        return true;
++    }
++    // purpur-port end - Break individual slabs when sneaking
+ }

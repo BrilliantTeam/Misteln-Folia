@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:57 +0800
+Subject: [PATCH] purpur-port: Configurable player Sleep Near Monsters settings
+
+
+diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
+index 41207e332da299b0a989950aefe6279d385a1116..bc34fd5dca36f90521677cd0cc11d06d072202a2 100644
+--- a/net/minecraft/server/level/ServerPlayer.java
++++ b/net/minecraft/server/level/ServerPlayer.java
+@@ -2137,7 +2137,7 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+                                 new AABB(vec3.x() - 8.0, vec3.y() - 5.0, vec3.z() - 8.0, vec3.x() + 8.0, vec3.y() + 5.0, vec3.z() + 8.0),
+                                 monster -> monster.isPreventingPlayerRest(this.level(), this)
+                             );
+-                        if (!entitiesOfClass.isEmpty()) {
++                    if (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.playerSleepNearMonsters && !entitiesOfClass.isEmpty()) { // purpur-port
+                             return Either.left(Player.BedSleepingProblem.NOT_SAFE);
+                         }
+                     }

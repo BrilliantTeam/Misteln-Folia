@@ -10,7 +10,7 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-rootProject.name = "folia"
+rootProject.name = "Misteln-Folia"
 
-include("folia-api")
-include("folia-server")
+include("misteln-folia-api")
+include("misteln-folia-server")

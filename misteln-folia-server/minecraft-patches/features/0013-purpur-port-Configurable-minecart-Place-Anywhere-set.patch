@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Tue, 15 Sep 2026 12:20:57 +0800
+Subject: [PATCH] purpur-port: Configurable minecart Place Anywhere settings
+
+
+diff --git a/net/minecraft/world/item/MinecartItem.java b/net/minecraft/world/item/MinecartItem.java
+index 3b511139985ea1646661ae0a6bcd1f0e386561e7..10d1b56425eab251c414f55c53e7a36e90ff2e1f 100644
+--- a/net/minecraft/world/item/MinecartItem.java
++++ b/net/minecraft/world/item/MinecartItem.java
+@@ -30,8 +30,9 @@ public class MinecartItem extends Item {
+         BlockPos clickedPos = context.getClickedPos();
+         BlockState blockState = level.getBlockState(clickedPos);
+         if (!blockState.is(BlockTags.RAILS)) {
+-            return InteractionResult.FAIL;
+-        } else {
++            if (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.minecartPlaceAnywhere) return InteractionResult.FAIL; // purpur-port - place minecarts anywhere
++            if (blockState.isSolid()) clickedPos = clickedPos.relative(context.getClickedFace()); // purpur-port - place minecarts anywhere
++        } // else { // purpur-port - place minecarts anywhere
+             ItemStack itemInHand = context.getItemInHand();
+             RailShape railShape = blockState.getBlock() instanceof BaseRailBlock
+                 ? blockState.getValue(((BaseRailBlock)blockState.getBlock()).getShapeProperty())
+@@ -72,6 +73,6 @@ public class MinecartItem extends Item {
+                 itemInHand.shrink(1);
+                 return InteractionResult.SUCCESS;
+             }
+-        }
++        // } // purpur-port - place minecarts anywhere
+     }
+ }
