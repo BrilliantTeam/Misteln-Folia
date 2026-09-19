@@ -1,0 +1,142 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:37 +0800
+Subject: [PATCH] Folia -> Misteln-Folia in-game display names
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..c63ac013c8199f93070bbd67ec5a1dceb6c7c585 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
++++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+@@ -41,7 +41,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+     private static final int DISTANCE_ERROR = -1;
+     private static final int DISTANCE_UNKNOWN = -2;
+     private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/folia"; // Folia
+-    private static final String REPOSITORY = "PaperMC/Folia"; // Folia
++    private static final String REPOSITORY = "BrilliantTeam/Misteln-Folia"; // Folia // Misteln-Folia
+     private static final ServerBuildInfo BUILD_INFO = ServerBuildInfo.buildInfo();
+     private static final String USER_AGENT = BUILD_INFO.brandName() + "/" + BUILD_INFO.asString(VERSION_SIMPLE) + " (https://papermc.io)";
+     private static final Gson GSON = new Gson();
+@@ -72,7 +72,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+             COMPONENT_LOGGER.warn(text("*** You are running a development version without access to version information ***"));
+         } else {
+             final Optional<MinecraftVersionFetcher> apiResult = fetchMinecraftVersionList();
+-            if (buildNumber.isPresent()) {
++            if (false) { // Misteln-Folia - always prefer github
+                 distance = fetchDistanceFromSiteApi(buildNumber.getAsInt());
+             } else {
+                 final Optional<String> gitBranch = BUILD_INFO.gitBranch();
+@@ -111,7 +111,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+         int distance = DISTANCE_ERROR;
+ 
+         final OptionalInt buildNumber = PaperVersionFetcher.BUILD_INFO.buildNumber();
+-        if (buildNumber.isPresent()) {
++        if (false) { // Misteln-Folia - always prefer github
+             distance = fetchDistanceFromSiteApi(buildNumber.getAsInt());
+         } else {
+             final Optional<String> gitBranch = PaperVersionFetcher.BUILD_INFO.gitBranch();
+diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
+index 43006c22f26b9b3ff83d6d9511a8f29921b7f46d..1f9073cb78507be8b4135c0dfbf1d5db0a09874a 100644
+--- a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
++++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
+@@ -21,7 +21,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
+     @Override
+     protected LineReader buildReader(LineReaderBuilder builder) {
+         builder
+-                .appName("Paper")
++                .appName("Misteln-Folia") // Misteln-Folia
+                 .variable(LineReader.HISTORY_FILE, PaperCacheDir.moveFromServerRootAndGet(".console_history", "console_history"))
+                 .completer(new ConsoleCommandCompleter(this.server))
+                 .option(LineReader.Option.COMPLETE_IN_WORD, true);
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index 10a0be7a4db1a51579d113d279af7a9effe7f438..6b98560a31186764ebaa2852b442a3e4160185c1 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -31,6 +31,7 @@ public record ServerBuildInfoImpl(
+     private static final String ATTRIBUTE_GIT_COMMIT = "Git-Commit";
+ 
+     private static final String BRAND_PAPER_NAME = "Paper";
++    private static final String BRAND_MISTELN_NAME = "Misteln-Folia"; // Misteln-Folia
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
+@@ -42,9 +43,9 @@ public record ServerBuildInfoImpl(
+         this(
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
+                 .map(Key::key)
+-                .orElse(Key.key("papermc", "folia")), // Folia
++                .orElse(BRAND_MISTELN_ID), // Folia // Misteln-Folia
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
+-                .orElse("Folia"), // Folia
++                .orElse(BRAND_MISTELN_NAME), // Folia // Misteln-Folia
+             SharedConstants.getCurrentVersion().id(),
+             SharedConstants.getCurrentVersion().name(),
+             getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
+@@ -61,7 +62,7 @@ public record ServerBuildInfoImpl(
+ 
+     @Override
+     public boolean isBrandCompatible(final @NotNull Key brandId) {
+-        return brandId.equals(this.brandId);
++        return brandId.equals(this.brandId) || brandId.equals(BRAND_MISTELN_ID); // Misteln-Folia
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index c4dcddc4db02ed3641d05fae31ead7c13205f841..81dcb6a56dfabcfccf8f9443d6486a73c767ae3f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -491,7 +491,7 @@ public class CraftScheduler implements BukkitScheduler {
+                 this.parsePending();
+             } else {
+                 // this.debugTail = this.debugTail.setNext(new CraftAsyncDebugger(this.currentTick + CraftScheduler.RECENT_TICKS, task.getOwner(), task.getTaskClass())); // Paper
+-                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Paper"); // Paper
++                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Misteln-Folia"); // Paper // Misteln-Folia
+                 // We don't need to parse pending
+                 // (async tasks must live with race-conditions if they attempt to cancel between these few lines of code)
+             }
+diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
+index 5607f4cc8ca2f620461eb5e97d01d9db0d6b2303..de575e02139237d2353fac5ba43f50db58d552b5 100644
+--- a/src/main/java/org/spigotmc/WatchdogThread.java
++++ b/src/main/java/org/spigotmc/WatchdogThread.java
+@@ -75,14 +75,14 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
+                 this.lastEarlyWarning = currentTime;
+                 if (isLongTimeout) {
+                     logger.log(Level.SEVERE, "------------------------------");
+-                    logger.log(Level.SEVERE, "The server has stopped responding! This is (probably) not a Paper bug."); // Paper
++                    logger.log(Level.SEVERE, "The server has stopped responding! This is (probably) not a Misteln-Folia bug."); // Paper // Misteln-Folia
+                     logger.log(Level.SEVERE, "If you see a plugin in the Server thread dump below, then please report it to that author");
+                     logger.log(Level.SEVERE, "\t *Especially* if it looks like HTTP or MySQL operations are occurring");
+                     logger.log(Level.SEVERE, "If you see a world save or edit, then it means you did far more than your server can handle at once");
+                     logger.log(Level.SEVERE, "\t If this is the case, consider increasing timeout-time in spigot.yml but note that this will replace the crash with LARGE lag spikes");
+-                    logger.log(Level.SEVERE, "If you are unsure or still think this is a Paper bug, please report this to https://github.com/PaperMC/Paper/issues");
++                    logger.log(Level.SEVERE, "If you are unsure or still think this is a Misteln-Folia bug, please report this to https://github.com/BrilliantTeam/Misteln-Folia/issues"); // Misteln-Folia
+                     logger.log(Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports");
+-                    logger.log(Level.SEVERE, "Paper version: " + Bukkit.getServer().getVersion());
++                    logger.log(Level.SEVERE, "Misteln-Folia version: " + Bukkit.getServer().getVersion()); // Misteln-Folia
+ 
+                     if (net.minecraft.world.level.Level.lastPhysicsProblem != null) {
+                         logger.log(Level.SEVERE, "------------------------------");
+@@ -102,12 +102,12 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
+                     }
+                     // Paper end
+                 } else {
+-                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---");
++                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO Misteln-Folia - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Misteln-Folia
+                     logger.log(Level.SEVERE, "The server has not responded for " + (currentTime - lastTick) / 1000 + " seconds! Creating thread dump");
+                 }
+                 // Paper end - Different message for short timeout
+                 logger.log(Level.SEVERE, "------------------------------");
+-                logger.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Paper!):"); // Paper
++                logger.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Misteln-Folia!):"); // Paper // Misteln-Folia
+                 FeatureHooks.dumpAllChunkLoadInfo(MinecraftServer.getServer(), isLongTimeout); // Paper - log detailed tick information
+                 WatchdogThread.dumpThread(ManagementFactory.getThreadMXBean().getThreadInfo(MinecraftServer.getServer().getRunningThread().threadId(), Integer.MAX_VALUE), logger);
+                 logger.log(Level.SEVERE, "------------------------------");
+@@ -120,7 +120,7 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
+                         WatchdogThread.dumpThread(thread, logger);
+                     }
+                 } else {
+-                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH ---");
++                    logger.log(Level.SEVERE, "--- DO NOT REPORT THIS TO Misteln-Folia - THIS IS NOT A BUG OR A CRASH ---"); // Misteln-Folia
+                 }
+ 
+                 logger.log(Level.SEVERE, "------------------------------");

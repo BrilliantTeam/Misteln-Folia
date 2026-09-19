@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:18 +0800
+Subject: [PATCH] purpur-port: Configurable death Message Only Broadcast To
+
+
+diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
+index 16f49ae6736c475207f31392307e280ec06edbc3..233efe94f5fe742d726d96b7454e2a1d97539958 100644
+--- a/net/minecraft/server/level/ServerPlayer.java
++++ b/net/minecraft/server/level/ServerPlayer.java
+@@ -1354,6 +1354,7 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+             // Paper - moved up to sendClientboundPlayerCombatKillPacket()
+             this.sendClientboundPlayerCombatKillPacket(event.getShowDeathMessages(), deathScreenMessage); // Paper - Expand PlayerDeathEvent
+             Team team = this.getTeam();
++            if (io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.deathMessageOnlyBroadcastToAffectedPlayer) this.sendSystemMessage(deathMessage); else // purpur-port
+             if (team == null || team.getDeathMessageVisibility() == Team.Visibility.ALWAYS) {
+                 this.server.getPlayerList().broadcastSystemMessage(deathMessage, false);
+             } else if (team.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OTHER_TEAMS) {

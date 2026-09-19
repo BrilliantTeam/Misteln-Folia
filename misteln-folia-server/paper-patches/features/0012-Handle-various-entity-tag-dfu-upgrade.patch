@@ -1,0 +1,212 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:38 +0800
+Subject: [PATCH] Handle various entity tag dfu upgrade
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
+index 6e84609f5d8c0ed06fd8e1a218713ba01ef5b9f1..0745d5951acaedd8d0deae833446529a5ada9088 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
+@@ -1,5 +1,7 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
++import ca.spottedleaf.dataconverter.minecraft.MCDataConverter;
++import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
+ import com.google.common.collect.ImmutableMap.Builder;
+ import java.util.Map;
+ import java.util.Objects;
+@@ -9,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.EntityTypes;
+ import net.minecraft.world.item.component.TypedEntityData;
++import org.bukkit.Bukkit;
+ import org.bukkit.Material;
+ import org.bukkit.configuration.serialization.DelegateDeserialization;
+ 
+@@ -169,6 +172,20 @@ public class CraftMetaArmorStand extends CraftMetaItem implements com.destroysto
+         return builder;
+     }
+ 
++    // Misteln start - perform nbt upgrade
++    @Override
++    public void setVersion(int version) {
++        super.setVersion(version);
++
++        if (version < Bukkit.getUnsafe().getDataVersion()) {
++            if (entityTag == null) return;
++
++            entityTag = MCDataConverter.convertTag(MCTypeRegistry.ENTITY, entityTag,
++                    version, Bukkit.getUnsafe().getDataVersion());
++        }
++    }
++    // Misteln end
++
+     @Override
+     public CraftMetaArmorStand clone() {
+         CraftMetaArmorStand clone = (CraftMetaArmorStand) super.clone();
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java
+index 423536b6666d68091e046985452efb9be6e5b56a..4b936b05e21c077a3737bcde356113292aee0240 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java
+@@ -1,5 +1,7 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
++import ca.spottedleaf.dataconverter.minecraft.MCDataConverter;
++import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
+ import com.google.common.collect.ImmutableMap;
+ import java.util.Map;
+ import java.util.Objects;
+@@ -11,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.EntityTypes;
+ import net.minecraft.world.item.component.CustomData;
+ import net.minecraft.world.item.component.TypedEntityData;
++import org.bukkit.Bukkit;
+ import org.bukkit.configuration.serialization.DelegateDeserialization;
+ import org.bukkit.entity.Axolotl;
+ import org.bukkit.inventory.meta.AxolotlBucketMeta;
+@@ -203,6 +206,20 @@ public class CraftMetaAxolotlBucket extends CraftMetaItem implements AxolotlBuck
+         return original != hash ? CraftMetaAxolotlBucket.class.hashCode() ^ hash : hash;
+     }
+ 
++    // Misteln start - perform nbt upgrade
++    @Override
++    public void setVersion(int version) {
++        super.setVersion(version);
++
++        if (version < Bukkit.getUnsafe().getDataVersion()) {
++            if (entityTag == null) return;
++
++            entityTag = MCDataConverter.convertTag(MCTypeRegistry.ENTITY, entityTag,
++                    version, Bukkit.getUnsafe().getDataVersion());
++        }
++    }
++    // Misteln end
++
+     @Override
+     public CraftMetaAxolotlBucket clone() {
+         CraftMetaAxolotlBucket clone = (CraftMetaAxolotlBucket) super.clone();
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java
+index 0d59991ec91bc6fd835de031a080af9074a1ba05..49ec2d9213d424f2f1f0ec8bf7b39720cb800612 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java
+@@ -1,5 +1,7 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
++import ca.spottedleaf.dataconverter.minecraft.MCDataConverter;
++import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
+ import com.google.common.collect.ImmutableMap.Builder;
+ import com.google.common.collect.Sets;
+ import java.util.Map;
+@@ -11,6 +13,7 @@ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.Tag;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.item.component.TypedEntityData;
++import org.bukkit.Bukkit;
+ import org.bukkit.Material;
+ import org.bukkit.configuration.serialization.DelegateDeserialization;
+ 
+@@ -125,6 +128,20 @@ public class CraftMetaEntityTag extends CraftMetaItem {
+         return builder;
+     }
+ 
++    // Misteln start - perform nbt upgrade
++    @Override
++    public void setVersion(int version) {
++        super.setVersion(version);
++
++        if (version < Bukkit.getUnsafe().getDataVersion()) {
++            if (entityTag == null) return;
++
++            entityTag = MCDataConverter.convertTag(MCTypeRegistry.ENTITY, entityTag,
++                    version, Bukkit.getUnsafe().getDataVersion());
++        }
++    }
++    // Misteln end
++
+     @Override
+     public CraftMetaEntityTag clone() {
+         CraftMetaEntityTag clone = (CraftMetaEntityTag) super.clone();
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
+index 17d19955789cba662b925611e804b636a06ac3b7..c557bf8d2a3ea98e9fdef55fa7981f1775ba5b77 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
+@@ -1,5 +1,7 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
++import ca.spottedleaf.dataconverter.minecraft.MCDataConverter;
++import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
+ import com.google.common.base.Preconditions;
+ import com.google.common.collect.ImmutableMap.Builder;
+ import java.util.Map;
+@@ -11,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.Tag;
+ import net.minecraft.world.item.component.TypedEntityData;
++import org.bukkit.Bukkit;
+ import org.bukkit.configuration.serialization.DelegateDeserialization;
+ import org.bukkit.craftbukkit.entity.CraftEntitySnapshot;
+ import org.bukkit.craftbukkit.entity.CraftEntityType;
+@@ -170,6 +173,20 @@ public class CraftMetaSpawnEgg extends CraftMetaItem implements SpawnEggMeta {
+         return builder;
+     }
+ 
++    // Misteln start - perform nbt upgrade
++    @Override
++    public void setVersion(int version) {
++        super.setVersion(version);
++
++        if (version < Bukkit.getUnsafe().getDataVersion()) {
++            if (entityTag == null) return;
++
++            entityTag = MCDataConverter.convertTag(MCTypeRegistry.ENTITY, entityTag,
++                    version, Bukkit.getUnsafe().getDataVersion());
++        }
++    }
++    // Misteln end
++
+     @Override
+     public CraftMetaSpawnEgg clone() {
+         CraftMetaSpawnEgg clone = (CraftMetaSpawnEgg) super.clone();
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
+index 6be1ddf5d7e053e06cdb5f436f1086693242f6c5..66caa12c305ddd0da22369b4cb39aec3790893e1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
+@@ -1,6 +1,8 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
+ import com.google.common.base.Preconditions;
++import ca.spottedleaf.dataconverter.minecraft.MCDataConverter;
++import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
+ import com.google.common.collect.ImmutableMap;
+ import java.util.Map;
+ import java.util.Objects;
+@@ -12,6 +14,7 @@ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.EntityTypes;
+ import net.minecraft.world.item.component.CustomData;
+ import net.minecraft.world.item.component.TypedEntityData;
++import org.bukkit.Bukkit;
+ import org.bukkit.DyeColor;
+ import org.bukkit.configuration.serialization.DelegateDeserialization;
+ import org.bukkit.entity.TropicalFish;
+@@ -289,6 +292,20 @@ public class CraftMetaTropicalFishBucket extends CraftMetaItem implements Tropic
+         return original != hash ? CraftMetaTropicalFishBucket.class.hashCode() ^ hash : hash;
+     }
+ 
++    // Misteln start - perform nbt upgrade
++    @Override
++    public void setVersion(int version) {
++        super.setVersion(version);
++
++        if (version < Bukkit.getUnsafe().getDataVersion()) {
++            if (entityTag == null) return;
++
++            entityTag = MCDataConverter.convertTag(MCTypeRegistry.ENTITY, entityTag,
++                    version, Bukkit.getUnsafe().getDataVersion());
++        }
++    }
++    // Misteln end
++
+     @Override
+     public CraftMetaTropicalFishBucket clone() {
+         CraftMetaTropicalFishBucket clone = (CraftMetaTropicalFishBucket) super.clone();

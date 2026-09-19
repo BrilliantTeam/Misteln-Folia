@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:19 +0800
+Subject: [PATCH] feat(dfu): handle attribute modifier and entity attribute
+
+
+diff --git a/net/minecraft/world/entity/ai/attributes/AttributeInstance.java b/net/minecraft/world/entity/ai/attributes/AttributeInstance.java
+index 82fb9b7092ee37bb4b46ad9a352df64821259ddc..a3e182893ca8f5d2a1463234efddbe8fa6e66cbe 100644
+--- a/net/minecraft/world/entity/ai/attributes/AttributeInstance.java
++++ b/net/minecraft/world/entity/ai/attributes/AttributeInstance.java
+@@ -201,7 +201,7 @@ public class AttributeInstance {
+     }
+ 
+     public record Packed(Holder<Attribute> attribute, double baseValue, List<AttributeModifier> modifiers) {
+-        public static final Codec<AttributeInstance.Packed> CODEC = RecordCodecBuilder.create(
++        private static final Codec<AttributeInstance.Packed> CURRENT_CODEC = RecordCodecBuilder.create( // Misteln - DFU: renamed from CODEC, see below
+             i -> i.group(
+                     BuiltInRegistries.ATTRIBUTE.holderByNameCodec().fieldOf("id").forGetter(AttributeInstance.Packed::attribute),
+                     ExtraCodecs.optionalAlwaysPresentFieldOf(Codec.DOUBLE, "base", 0.0).forGetter(AttributeInstance.Packed::baseValue),
+@@ -209,6 +209,60 @@ public class AttributeInstance {
+                 )
+                 .apply(i, AttributeInstance.Packed::new)
+         );
++        // Misteln start - DFU: upgrade legacy attribute data that bypassed the data converter (e.g. entity NBT merged by plugins)
++        public static final Codec<AttributeInstance.Packed> CODEC = Codec.of(CURRENT_CODEC, new com.mojang.serialization.Decoder<AttributeInstance.Packed>() {
++            @Override
++            public <T> com.mojang.serialization.DataResult<com.mojang.datafixers.util.Pair<AttributeInstance.Packed, T>> decode(final com.mojang.serialization.DynamicOps<T> ops, final T input) {
++                return CURRENT_CODEC.decode(ops, upgradeLegacy(new com.mojang.serialization.Dynamic<>(ops, input)).getValue());
++            }
++        });
++        private static final String[] LEGACY_OPERATIONS = {"add_value", "add_multiplied_base", "add_multiplied_total"};
++
++        // attributes were Name/Base/Modifiers before 1.20.5, modifiers had a uuid and name instead of an id before 1.21
++        private static <T> com.mojang.serialization.Dynamic<T> upgradeLegacy(com.mojang.serialization.Dynamic<T> attribute) {
++            attribute = renameLegacyField(attribute, "Name", "id");
++            attribute = renameLegacyField(attribute, "Base", "base");
++            attribute = renameLegacyField(attribute, "Modifiers", "modifiers");
++            final java.util.Optional<java.util.stream.Stream<com.mojang.serialization.Dynamic<T>>> modifiers = attribute.get("modifiers").asStreamOpt().result();
++            if (modifiers.isPresent()) {
++                attribute = attribute.set("modifiers", attribute.createList(modifiers.get().map(Packed::upgradeLegacyModifier)));
++            }
++            return attribute;
++        }
++
++        private static <T> com.mojang.serialization.Dynamic<T> upgradeLegacyModifier(com.mojang.serialization.Dynamic<T> modifier) {
++            final com.mojang.serialization.Dynamic<T> legacy = modifier;
++            if (legacy.get("id").result().isEmpty()) {
++                final java.util.Optional<String> path = legacy.get("uuid").read(net.minecraft.core.UUIDUtil.CODEC).result()
++                    .or(() -> legacy.get("UUID").read(net.minecraft.core.UUIDUtil.CODEC).result())
++                    .map(java.util.UUID::toString)
++                    .or(() -> legacy.get("name").asString().result().or(() -> legacy.get("Name").asString().result())
++                        .map(name -> name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9/._-]", "_")));
++                if (path.isPresent()) {
++                    modifier = modifier.set("id", modifier.createString(net.minecraft.resources.Identifier.withDefaultNamespace(path.get()).toString()));
++                }
++            }
++            modifier = renameLegacyField(modifier, "Amount", "amount");
++            final java.util.Optional<Number> operation = modifier.get("Operation").asNumber().result();
++            if (operation.isPresent()) {
++                modifier = modifier.remove("Operation");
++                if (modifier.get("operation").result().isEmpty()) {
++                    final int index = operation.get().intValue();
++                    modifier = modifier.set("operation", modifier.createString(index >= 0 && index < LEGACY_OPERATIONS.length ? LEGACY_OPERATIONS[index] : LEGACY_OPERATIONS[0]));
++                }
++            }
++            return modifier;
++        }
++
++        private static <T> com.mojang.serialization.Dynamic<T> renameLegacyField(final com.mojang.serialization.Dynamic<T> dynamic, final String from, final String to) {
++            final java.util.Optional<com.mojang.serialization.Dynamic<T>> value = dynamic.get(from).result();
++            if (value.isEmpty()) {
++                return dynamic;
++            }
++            final com.mojang.serialization.Dynamic<T> removed = dynamic.remove(from);
++            return removed.get(to).result().isPresent() ? removed : removed.set(to, value.get());
++        }
++        // Misteln end - DFU
+         public static final Codec<List<AttributeInstance.Packed>> LIST_CODEC = CODEC.listOf();
+     }
+ }

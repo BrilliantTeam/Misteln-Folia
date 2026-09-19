@@ -1,0 +1,18 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 8d09c8f..9f390db 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -6,10 +6,10 @@[m [mbuild[m
+ [m
+ /run[m
+ [m
+[31m-/folia-server/build.gradle.kts[m
+[31m-/folia-server/src/minecraft[m
+[32m+[m[32m/misteln-folia-server/build.gradle.kts[m
+[32m+[m[32m/misteln-folia-server/src/minecraft[m
+ /paper-server[m
+[31m-/folia-api/build.gradle.kts[m
+[32m+[m[32m/misteln-folia-api/build.gradle.kts[m
+ /paper-api[m
+ /paper-api-generator[m
+ /paper-checkstyle[m

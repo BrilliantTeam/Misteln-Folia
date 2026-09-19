@@ -1,0 +1,296 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:39 +0800
+Subject: [PATCH] Upgrade Bukkit item meta data from 1.21.8 to 1.21.11
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
+index 3eea7b5e12a440162ca07113a59cd5ccacf0dd2d..4e274e72173264ee925d35d4b1e2df53052039f5 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
+@@ -456,6 +456,11 @@ public final class CraftItemStack extends ItemStack {
+             void skullCallback(final ResolvableProfile profile) {
+                 itemStack.set(DataComponents.PROFILE, profile);
+             }
++
++            @Override
++            net.minecraft.world.entity.EntityType<?> itemEntityType() {
++                return ItemMetaDataUpgrader.entityTypeOf(itemStack); // Misteln - DFU
++            }
+         };
+         // Paper end - support updating profile after resolving it
+         ((CraftMetaItem) itemMeta).applyToItem(tag);
+@@ -511,6 +516,11 @@ public final class CraftItemStack extends ItemStack {
+                 void skullCallback(final ResolvableProfile resolvableProfile) {
+                     item.set(DataComponents.PROFILE, resolvableProfile);
+                 }
++
++                @Override
++                net.minecraft.world.entity.EntityType<?> itemEntityType() {
++                    return ItemMetaDataUpgrader.entityTypeOf(item); // Misteln - DFU
++                }
+             };
+             // Paper end - support updating profile after resolving it
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
+index 0745d5951acaedd8d0deae833446529a5ada9088..ff0a1e73d437a41e2ffbe5009c24072550c9448d 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
+@@ -108,9 +108,12 @@ public class CraftMetaArmorStand extends CraftMetaItem implements com.destroysto
+     void applyToItem(CraftMetaItem.Applicator tag) {
+         super.applyToItem(tag);
+ 
+-        if (this.entityTag != null) {
+-            tag.put(CraftMetaArmorStand.ENTITY_TAG, TypedEntityData.decodeEntity(this.entityTag));
++        // Misteln start - DFU: entity data needs an id since 1.21.9
++        final TypedEntityData<net.minecraft.world.entity.EntityType<?>> entityData = this.entityTag != null ? ItemMetaDataUpgrader.entityData(this.entityTag, tag.itemEntityType()) : null;
++        if (entityData != null) {
++            tag.put(CraftMetaArmorStand.ENTITY_TAG, entityData);
+         }
++        // Misteln end
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java
+index 0199e2e03c9ac169a51e13ffe7b5ddaf2b4650f5..cea9d033d6094339158e2fb278f2f5b539c9b1ce 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaAxolotlBucket.java
+@@ -132,9 +132,12 @@ public class CraftMetaAxolotlBucket extends CraftMetaItem implements AxolotlBuck
+     void applyToItem(CraftMetaItem.Applicator tag) {
+         super.applyToItem(tag);
+ 
+-        if (this.entityTag != null) {
+-            tag.put(CraftMetaAxolotlBucket.ENTITY_TAG, TypedEntityData.decodeEntity(this.entityTag));
++        // Misteln start - DFU: entity data needs an id since 1.21.9
++        final TypedEntityData<net.minecraft.world.entity.EntityType<?>> entityData = this.entityTag != null ? ItemMetaDataUpgrader.entityData(this.entityTag, tag.itemEntityType()) : null;
++        if (entityData != null) {
++            tag.put(CraftMetaAxolotlBucket.ENTITY_TAG, entityData);
+         }
++        // Misteln end
+ 
+         if (this.bucketEntityTag != null) {
+             tag.put(CraftMetaAxolotlBucket.BUCKET_ENTITY_TAG, CustomData.of(this.bucketEntityTag));
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+index 1293e1401e900b6e5893da91624486c4a4a74e69..46b8e3356dc2c10971fb6cf368841990c4b9710a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+@@ -355,7 +355,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
+         final net.minecraft.world.level.block.state.BlockState nmsBlockState = ((org.bukkit.craftbukkit.block.data.CraftBlockData) this.getBlockData(stateMaterial)).getState();
+         final net.minecraft.world.level.block.entity.BlockEntity blockEntity = java.util.Objects.requireNonNull(type.create(pos, nmsBlockState));
+         if (!this.blockEntityTag.isEmpty()) {
+-            TypedEntityData.decodeBlockEntity(this.blockEntityTag).loadInto(blockEntity, CraftRegistry.getMinecraftRegistry());
++            TypedEntityData.of(type, this.blockEntityTag).loadInto(blockEntity, CraftRegistry.getMinecraftRegistry()); // Misteln - DFU: typed since 1.21.9, block entity tags of older Bukkit metas may lack the id
+         }
+         final PatchedDataComponentMap patchedMap = new PatchedDataComponentMap(nmsBlockState.getBlock().asItem().components());
+         patchedMap.setAll(this.components);
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java
+index cc5acbb5f5c32c0564cfd972b3f93d01b81c475e..c45fe59319685c3b836f219918967105d1bf23db 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEntityTag.java
+@@ -74,9 +74,12 @@ public class CraftMetaEntityTag extends CraftMetaItem {
+     void applyToItem(CraftMetaItem.Applicator tag) {
+         super.applyToItem(tag);
+ 
+-        if (this.entityTag != null) {
+-            tag.put(CraftMetaEntityTag.ENTITY_TAG, TypedEntityData.decodeEntity(this.entityTag));
++        // Misteln start - DFU: entity data needs an id since 1.21.9
++        final TypedEntityData<net.minecraft.world.entity.EntityType<?>> entityData = this.entityTag != null ? ItemMetaDataUpgrader.entityData(this.entityTag, tag.itemEntityType()) : null;
++        if (entityData != null) {
++            tag.put(CraftMetaEntityTag.ENTITY_TAG, entityData);
+         }
++        // Misteln end
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
+index 46f81442976be070007129897fa56500036951d2..9997a5da9ccddc19da4314b8678f6ca36ea426d0 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
+@@ -217,6 +217,7 @@ public class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDat
+ 
+         final DataComponentPatch.Builder builder = DataComponentPatch.builder();
+         void skullCallback(net.minecraft.world.item.component.ResolvableProfile resolvableProfile) {} // Paper - support updating profile after resolving it
++        net.minecraft.world.entity.EntityType<?> itemEntityType() { return null; } // Misteln - DFU: the entity of the item, for entity tags without id
+ 
+         <T> Applicator put(ItemMetaKeyType<T> key, T value) {
+             this.builder.set(key.TYPE, value);
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
+index c557bf8d2a3ea98e9fdef55fa7981f1775ba5b77..42e1c53d32fa47e70b0abe6a78725795bbe31068 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
+@@ -77,9 +77,12 @@ public class CraftMetaSpawnEgg extends CraftMetaItem implements SpawnEggMeta {
+     void applyToItem(CraftMetaItem.Applicator tag) {
+         super.applyToItem(tag);
+ 
+-        if (this.entityTag != null) {
+-            tag.put(CraftMetaSpawnEgg.ENTITY_TAG, TypedEntityData.decodeEntity(this.entityTag));
++        // Misteln start - DFU: entity data needs an id since 1.21.9
++        final TypedEntityData<net.minecraft.world.entity.EntityType<?>> entityData = this.entityTag != null ? ItemMetaDataUpgrader.entityData(this.entityTag, tag.itemEntityType()) : null;
++        if (entityData != null) {
++            tag.put(CraftMetaSpawnEgg.ENTITY_TAG, entityData);
+         }
++        // Misteln end
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
+index 393e30df88f9ee78ca28f46522e3f4666755626c..311c4aaf2cf3fbd034722a55bd9dcd42a8200ff0 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
+@@ -166,9 +166,12 @@ public class CraftMetaTropicalFishBucket extends CraftMetaItem implements Tropic
+     void applyToItem(CraftMetaItem.Applicator tag) {
+         super.applyToItem(tag);
+ 
+-        if (this.entityTag != null) {
+-            tag.put(CraftMetaTropicalFishBucket.ENTITY_TAG, TypedEntityData.decodeEntity(this.entityTag));
++        // Misteln start - DFU: entity data needs an id since 1.21.9
++        final TypedEntityData<net.minecraft.world.entity.EntityType<?>> entityData = this.entityTag != null ? ItemMetaDataUpgrader.entityData(this.entityTag, tag.itemEntityType()) : null;
++        if (entityData != null) {
++            tag.put(CraftMetaTropicalFishBucket.ENTITY_TAG, entityData);
+         }
++        // Misteln end
+         if (this.bucketEntityTag != null) {
+             tag.put(CraftMetaTropicalFishBucket.BUCKET_ENTITY_TAG, CustomData.of(this.bucketEntityTag));
+         }
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgrader.java b/src/main/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgrader.java
+index 5b445713fa75bb0df9f55e46f42e68ca5fdf64f8..fe5c7781accf56f22b39fd780313e2f71da2dd26 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgrader.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgrader.java
+@@ -2,7 +2,15 @@ package org.bukkit.craftbukkit.inventory;
+ 
+ import ca.spottedleaf.dataconverter.minecraft.MCDataConverter;
+ import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
++import java.util.Map;
++import net.minecraft.core.component.DataComponents;
+ import net.minecraft.nbt.CompoundTag;
++import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.entity.EntityTypes;
++import net.minecraft.world.item.Item;
++import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.Items;
++import net.minecraft.world.item.component.TypedEntityData;
+ import net.minecraft.world.level.block.entity.BlockEntityType;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.jspecify.annotations.Nullable;
+@@ -17,6 +25,32 @@ final class ItemMetaDataUpgrader {
+     private ItemMetaDataUpgrader() {
+     }
+ 
++    // entity data is typed since 1.21.9 and needs an id, Bukkit kept id-less entity tags (pre 1.20.5 EntityTag, SpawnEggMeta#setCustomSpawnedType(null))
++    // which belong to the entity of the item, null if the id is unknown and there is no item to take it from
++    static @Nullable TypedEntityData<EntityType<?>> entityData(final CompoundTag tag, final @Nullable EntityType<?> itemEntityType) {
++        final EntityType<?> type = tag.read("id", EntityType.CODEC).orElse(itemEntityType);
++        return type == null ? null : TypedEntityData.of(type, tag.copy());
++    }
++
++    private static final Map<Item, EntityType<?>> ITEM_ENTITY_TYPES = Map.of(
++        Items.ARMOR_STAND, EntityTypes.ARMOR_STAND,
++        Items.ITEM_FRAME, EntityTypes.ITEM_FRAME,
++        Items.GLOW_ITEM_FRAME, EntityTypes.GLOW_ITEM_FRAME,
++        Items.PAINTING, EntityTypes.PAINTING,
++        Items.COD_BUCKET, EntityTypes.COD,
++        Items.SALMON_BUCKET, EntityTypes.SALMON,
++        Items.PUFFERFISH_BUCKET, EntityTypes.PUFFERFISH,
++        Items.TADPOLE_BUCKET, EntityTypes.TADPOLE,
++        Items.AXOLOTL_BUCKET, EntityTypes.AXOLOTL,
++        Items.TROPICAL_FISH_BUCKET, EntityTypes.TROPICAL_FISH
++    );
++
++    // spawn eggs carry their entity as a default component since 1.21.9
++    static @Nullable EntityType<?> entityTypeOf(final ItemStack item) {
++        final TypedEntityData<EntityType<?>> prototype = item.getPrototype().get(DataComponents.ENTITY_DATA);
++        return prototype != null ? prototype.type() : ITEM_ENTITY_TYPES.get(item.getItem());
++    }
++
+     static boolean needsUpgrade(final int version) {
+         return version < CraftMagicNumbers.INSTANCE.getDataVersion();
+     }
+diff --git a/src/test/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgradeTest.java b/src/test/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgradeTest.java
+index e8fe8955fe140cfdda3b95e2351e8208b7fd6c25..5554a9502b7bdc5a40d63d8d33ac10c056e752b2 100644
+--- a/src/test/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgradeTest.java
++++ b/src/test/java/org/bukkit/craftbukkit/inventory/ItemMetaDataUpgradeTest.java
+@@ -27,12 +27,13 @@ import org.bukkit.support.environment.AllFeatures;
+ import org.bukkit.tag.DamageTypeTags;
+ import org.junit.jupiter.api.Test;
+ 
+-// Misteln - DFU: items serialized by 1.21.1 (data version 3955) and 1.21.4 (4189) must still load
++// Misteln - DFU: items serialized by 1.21.1 (data version 3955), 1.21.4 (4189) and 1.21.8 (4440) must still load
+ @AllFeatures
+ public class ItemMetaDataUpgradeTest {
+ 
+     private static final int V1_21_1 = 3955;
+     private static final int V1_21_4 = 4189;
++    private static final int V1_21_8 = 4440;
+ 
+     static String base64(CompoundTag tag) throws IOException {
+         ByteArrayOutputStream buf = new ByteArrayOutputStream();
+@@ -470,4 +471,69 @@ public class ItemMetaDataUpgradeTest {
+         assertFalse(apiNms.get(DataComponents.BUCKET_ENTITY_DATA).copyTag().contains("Variant"));
+         assertEquals(api, CraftItemStack.asBukkitCopy(apiNms), "variant component round trip");
+     }
++
++    @Test
++    public void testChainAndSpearAnimation() throws IOException {
++        CompoundTag chain = new CompoundTag();
++        chain.putString("id", "minecraft:chain");
++        chain.putInt("count", 3);
++        CompoundTag slot = new CompoundTag();
++        slot.putInt("slot", 0);
++        slot.put("item", chain);
++        ListTag container = new ListTag();
++        container.add(slot);
++        CompoundTag consumable = new CompoundTag();
++        consumable.putString("animation", "spear");
++        CompoundTag unhandled = new CompoundTag();
++        unhandled.put("minecraft:container", container);
++        unhandled.put("minecraft:consumable", consumable);
++
++        // 1.21.4 servers upgrade straight to this version, without re-saving on 1.21.8 first
++        for (int version : new int[]{V1_21_4, V1_21_8}) {
++            ItemStack stack = load(version, "CHAIN", ""
++                + "    meta-type: UNSPECIFIC\n"
++                + "    unhandled: " + base64(unhandled) + "\n");
++
++            assertEquals(Material.IRON_CHAIN, stack.getType(), "chain -> iron_chain from " + version);
++            net.minecraft.world.item.ItemStack nms = CraftItemStack.asNMSCopy(stack);
++            assertEquals(net.minecraft.world.item.Items.IRON_CHAIN, nms.get(DataComponents.CONTAINER).copyOne().getItem(), "nested chain -> iron_chain from " + version);
++            assertEquals(net.minecraft.world.item.ItemUseAnimation.TRIDENT, nms.get(DataComponents.CONSUMABLE).animation(), "the old spear animation is the trident one from " + version);
++        }
++    }
++
++    @Test
++    public void testEntityTagWithoutId() throws IOException {
++        CompoundTag frame = new CompoundTag();
++        frame.putBoolean("Invisible", true);
++        CompoundTag frameInternal = new CompoundTag();
++        frameInternal.put("EntityTag", frame);
++        CompoundTag egg = new CompoundTag();
++        egg.putBoolean("NoAI", true);
++        CompoundTag eggInternal = new CompoundTag();
++        eggInternal.put("entity-tag", egg);
++
++        // 1.21.4 servers upgrade straight to this version, without re-saving on 1.21.8 first
++        for (int version : new int[]{V1_21_4, V1_21_8}) {
++            ItemStack frameStack = load(version, "ITEM_FRAME", ""
++                + "    meta-type: ENTITY_TAG\n"
++                + "    internal: " + base64(frameInternal) + "\n");
++            net.minecraft.world.item.component.TypedEntityData<net.minecraft.world.entity.EntityType<?>> frameData = CraftItemStack.asNMSCopy(frameStack).get(DataComponents.ENTITY_DATA);
++            assertEquals(net.minecraft.world.entity.EntityTypes.ITEM_FRAME, frameData.type(), "from " + version);
++            assertTrue(frameData.copyTagWithoutId().getBooleanOr("Invisible", false), "from " + version);
++
++            ItemStack eggStack = load(version, "PIG_SPAWN_EGG", ""
++                + "    meta-type: SPAWN_EGG\n"
++                + "    internal: " + base64(eggInternal) + "\n");
++            net.minecraft.world.item.component.TypedEntityData<net.minecraft.world.entity.EntityType<?>> eggData = CraftItemStack.asNMSCopy(eggStack).get(DataComponents.ENTITY_DATA);
++            assertEquals(net.minecraft.world.entity.EntityTypes.PIG, eggData.type(), "from " + version);
++            assertTrue(eggData.copyTagWithoutId().getBooleanOr("NoAI", false), "from " + version);
++        }
++
++        org.bukkit.inventory.meta.SpawnEggMeta meta = (org.bukkit.inventory.meta.SpawnEggMeta) new ItemStack(Material.ZOMBIE_SPAWN_EGG).getItemMeta();
++        meta.setCustomSpawnedType(org.bukkit.entity.EntityType.PIG);
++        meta.setCustomSpawnedType(null);
++        ItemStack api = new ItemStack(Material.ZOMBIE_SPAWN_EGG);
++        assertTrue(api.setItemMeta(meta), "an id-less entity tag must not throw");
++        assertEquals(net.minecraft.world.entity.EntityTypes.ZOMBIE, CraftItemStack.asNMSCopy(api).get(DataComponents.ENTITY_DATA).type());
++    }
+ }

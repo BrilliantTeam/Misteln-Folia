@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:19 +0800
+Subject: [PATCH] purpur-port: Configurable sponge absorbs lava settings
+
+
+diff --git a/net/minecraft/world/level/block/SpongeBlock.java b/net/minecraft/world/level/block/SpongeBlock.java
+index 604bd261066fbbd98e1b95602187f0b6b3f63010..b8f120bddf2a23aed0c3da89361d3f72ff1817eb 100644
+--- a/net/minecraft/world/level/block/SpongeBlock.java
++++ b/net/minecraft/world/level/block/SpongeBlock.java
+@@ -65,7 +65,7 @@ public class SpongeBlock extends Block {
+                 BlockState blockState = blockList.getBlockState(pos);
+                 FluidState fluidState = blockList.getFluidState(pos);
+                 // CraftBukkit end
+-                if (!fluidState.is(FluidTags.WATER)) {
++                if (!fluidState.is(FluidTags.WATER) && (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.spongeAbsorbsLava || !fluidState.is(FluidTags.LAVA))) { // purpur-port
+                     return BlockPos.TraversalNodeStatus.SKIP;
+                 } else if (blockState.getBlock() instanceof BucketPickup bucketPickup
+                     && !bucketPickup.pickupBlock(null, blockList, pos, blockState).isEmpty()) { // CraftBukkit

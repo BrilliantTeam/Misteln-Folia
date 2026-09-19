@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:19 +0800
+Subject: [PATCH] Keep hide_additional_tooltip consistent with ItemFlag
+
+
+diff --git a/ca/spottedleaf/dataconverter/minecraft/versions/V4307.java b/ca/spottedleaf/dataconverter/minecraft/versions/V4307.java
+index 9f2fc63420060247b6c5684918cdf06d7a630043..bd930debf33ffe9275e0d736233678f710770e7b 100644
+--- a/ca/spottedleaf/dataconverter/minecraft/versions/V4307.java
++++ b/ca/spottedleaf/dataconverter/minecraft/versions/V4307.java
+@@ -105,10 +105,11 @@ public final class V4307 {
+ 
+                 if (hideAdditionalTooltip) {
+                     for (final String component : ADDITIONAL_TOOLTIP_COMPONENTS) {
+-                        if (root.hasKey(component)) {
+-                            hiddenComponents.add(component);
+-                        }
++                        // Misteln start - hide all of them like ItemFlag.HIDE_ADDITIONAL_TOOLTIP does, so upgraded items stay similar to the ones made by plugins
++                        hiddenComponents.add(component);
++                        // Misteln end
+                     }
++                    hiddenComponents.add("minecraft:jukebox_playable"); // Misteln - also part of HIDE_ADDITIONAL_TOOLTIP in CraftMetaItem
+                 }
+ 
+                 root.remove("minecraft:hide_tooltip");

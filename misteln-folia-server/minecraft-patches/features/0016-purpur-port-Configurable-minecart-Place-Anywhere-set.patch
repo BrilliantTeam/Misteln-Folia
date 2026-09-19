@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:18 +0800
+Subject: [PATCH] purpur-port: Configurable minecart Place Anywhere settings
+
+
+diff --git a/net/minecraft/world/item/MinecartItem.java b/net/minecraft/world/item/MinecartItem.java
+index 2ce6aecf5e34528c9601ce2f071bebd6c2f47243..65f087b2fd90a028c406b442b2f386c3dff7b5ae 100644
+--- a/net/minecraft/world/item/MinecartItem.java
++++ b/net/minecraft/world/item/MinecartItem.java
+@@ -30,7 +30,8 @@ public class MinecartItem extends Item {
+         BlockPos pos = context.getClickedPos();
+         BlockState blockState = level.getBlockState(pos);
+         if (!blockState.is(BlockTags.RAILS)) {
+-            return InteractionResult.FAIL;
++            if (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.minecartPlaceAnywhere) return InteractionResult.FAIL; // purpur-port - place minecarts anywhere
++            if (blockState.isSolid()) pos = pos.relative(context.getClickedFace()); // purpur-port - place minecarts anywhere
+         }
+ 
+         ItemStack itemStack = context.getItemInHand();

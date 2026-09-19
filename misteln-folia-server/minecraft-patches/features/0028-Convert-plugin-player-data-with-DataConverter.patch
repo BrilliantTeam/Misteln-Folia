@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Sat, 19 Sep 2026 10:53:20 +0800
+Subject: [PATCH] Convert plugin player data with DataConverter
+
+
+diff --git a/net/minecraft/util/datafix/DataFixTypes.java b/net/minecraft/util/datafix/DataFixTypes.java
+index 4168626dcff36763e5354fc165044d96ca661572..2b6d8a3a5931e93997b8c6c4f1da2aa0d39bff18 100644
+--- a/net/minecraft/util/datafix/DataFixTypes.java
++++ b/net/minecraft/util/datafix/DataFixTypes.java
+@@ -86,6 +86,11 @@ public enum DataFixTypes {
+     }
+ 
+     public CompoundTag update(final DataFixer fixer, final CompoundTag tag, final int fromVersion, final int toVersion) {
++        // Misteln start - plugins store inventories as player data (e.g. Minepacks), convert them like the server converts players
++        if (this == PLAYER) {
++            return ca.spottedleaf.dataconverter.minecraft.MCDataConverter.convertTag(ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.PLAYER, tag, fromVersion, toVersion);
++        }
++        // Misteln end - plugins store inventories as player data (e.g. Minepacks), convert them like the server converts players
+         return (CompoundTag)this.update(fixer, new Dynamic<>(NbtOps.INSTANCE, tag), fromVersion, toVersion).getValue();
+     }
+ 
