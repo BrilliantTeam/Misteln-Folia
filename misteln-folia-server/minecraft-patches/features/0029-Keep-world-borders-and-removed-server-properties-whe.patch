@@ -1,11 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: RICE0707 <master.end.9377@gmail.com>
-Date: Sat, 19 Sep 2026 10:53:20 +0800
+Date: Sat, 19 Sep 2026 10:01:52 +0800
 Subject: [PATCH] Keep world borders and removed server properties when
 
 
 diff --git a/net/minecraft/server/dedicated/DedicatedServerProperties.java b/net/minecraft/server/dedicated/DedicatedServerProperties.java
-index 639a5400499266f83cf8b7c1251483cd8fb699a4..9f9a59ff56643dfd281b21c4be1cbc592c9b17df 100644
+index 458a1025d36655de7aa1bad9f2e7544626508be7..b85b0084621c23f71303b983b863b4e80e11becb 100644
 --- a/net/minecraft/server/dedicated/DedicatedServerProperties.java
 +++ b/net/minecraft/server/dedicated/DedicatedServerProperties.java
 @@ -80,6 +80,20 @@ public class DedicatedServerProperties extends Settings<DedicatedServerPropertie
@@ -30,10 +30,10 @@ index 639a5400499266f83cf8b7c1251483cd8fb699a4..9f9a59ff56643dfd281b21c4be1cbc59
      public final int queryPort = this.get("query.port", 25565);
      public final boolean enableRcon = this.get("enable-rcon", false);
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index 35ab432bbd59aba80a6eaca1769e6aa82c8a7e46..cf95d70c132a510ae2fff284be73940a9d14149a 100644
+index 558fab82e14a89a3f5aaeda676cc619c0c262929..41e2805503a3188757f428649ad03dbf343263f9 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
-@@ -592,7 +592,19 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
+@@ -594,7 +594,19 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
          savedDataStorage.set(io.papermc.paper.world.saveddata.PaperLevelOverrides.TYPE, levelData);
          savedDataStorage.set(io.papermc.paper.world.saveddata.PaperWorldMetadata.TYPE, new io.papermc.paper.world.saveddata.PaperWorldMetadata(loadedWorldData.uuid()));
          savedDataStorage.set(io.papermc.paper.world.saveddata.PaperWorldPDC.TYPE, loadedWorldData.pdc() == null ? io.papermc.paper.world.saveddata.PaperWorldPDC.TYPE.constructor().get() : loadedWorldData.pdc());

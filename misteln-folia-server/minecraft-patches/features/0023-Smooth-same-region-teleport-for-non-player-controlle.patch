@@ -5,10 +5,10 @@ Subject: [PATCH] Smooth same-region teleport for non-player-controlled
 
 
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index 4dae6b628bca60334174fbf1bb39f201911c17cd..dc3905de8658d1c3ef032993484691c6436542d3 100644
+index f1c6cf8598996f24b62c3567187ec9121b3d2298..3914b82e4450d918510c233b6f84fc80119dae0f 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
-@@ -4521,9 +4521,18 @@ public abstract class Entity
+@@ -4632,9 +4632,18 @@ public abstract class Entity
                  && ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(destination, ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(pos), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(pos), 8)
                  && (((teleportFlags & TELEPORT_FLAG_LOAD_CHUNK) == 0L) || destination.areChunksLoadedForMove(this.getBoundingBoxAt(pos.x, pos.y, pos.z)))) {
              boolean hasPassengers = !this.passengers.isEmpty();
@@ -28,7 +28,7 @@ index 4dae6b628bca60334174fbf1bb39f201911c17cd..dc3905de8658d1c3ef032993484691c6
                  // Note: The client does not accept position updates for controlled entities. So, we must
                  // perform a lot of tracker updates here to make it all work out.
  
-@@ -4538,7 +4547,7 @@ public abstract class Entity
+@@ -4649,7 +4658,7 @@ public abstract class Entity
              if (hasPassengers) {
                  passengerTree.restore();
                  // re-add to the tracker once the tree is restored

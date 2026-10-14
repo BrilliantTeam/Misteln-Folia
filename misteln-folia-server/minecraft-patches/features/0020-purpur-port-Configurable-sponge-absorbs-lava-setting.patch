@@ -5,15 +5,15 @@ Subject: [PATCH] purpur-port: Configurable sponge absorbs lava settings
 
 
 diff --git a/net/minecraft/world/level/block/SpongeBlock.java b/net/minecraft/world/level/block/SpongeBlock.java
-index 604bd261066fbbd98e1b95602187f0b6b3f63010..b8f120bddf2a23aed0c3da89361d3f72ff1817eb 100644
+index 581e6d5c73b7bee7adbbfd1e2fe52fc71e0b8c2b..d4d41e2567f2dd5f2aa4650510b431ed1e526cfa 100644
 --- a/net/minecraft/world/level/block/SpongeBlock.java
 +++ b/net/minecraft/world/level/block/SpongeBlock.java
-@@ -65,7 +65,7 @@ public class SpongeBlock extends Block {
-                 BlockState blockState = blockList.getBlockState(pos);
+@@ -58,7 +58,7 @@ public class SpongeBlock extends Block {
+                 BlockState state = blockList.getBlockState(pos);
                  FluidState fluidState = blockList.getFluidState(pos);
                  // CraftBukkit end
 -                if (!fluidState.is(FluidTags.WATER)) {
 +                if (!fluidState.is(FluidTags.WATER) && (!io.papermc.paper.configuration.GlobalConfiguration.get().purpurPort.spongeAbsorbsLava || !fluidState.is(FluidTags.LAVA))) { // purpur-port
                      return BlockPos.TraversalNodeStatus.SKIP;
-                 } else if (blockState.getBlock() instanceof BucketPickup bucketPickup
-                     && !bucketPickup.pickupBlock(null, blockList, pos, blockState).isEmpty()) { // CraftBukkit
+                 } else if (state.getBlock() instanceof BucketPickup bucketPickup && !bucketPickup.pickupBlock(null, blockList, pos, state).isEmpty()) { // CraftBukkit
+                     return BlockPos.TraversalNodeStatus.ACCEPT;

@@ -5,10 +5,10 @@ Subject: [PATCH] purpur-port: Configurable chest Open With Block On Top
 
 
 diff --git a/net/minecraft/world/level/block/ChestBlock.java b/net/minecraft/world/level/block/ChestBlock.java
-index 4bd84b80199c7f625475ca62da02266d871a8639..a9006d1f4def17e761a6e93a2d42b75742eeddf2 100644
+index 4b3f5c92f3caf6d68f60b906d1f7eb552698ef05..ba410aedd4b076611f4db4425cb0deb5855552f6 100644
 --- a/net/minecraft/world/level/block/ChestBlock.java
 +++ b/net/minecraft/world/level/block/ChestBlock.java
-@@ -348,6 +348,7 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements
+@@ -334,6 +334,7 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements
      }
  
      private static boolean isBlockedChestByBlock(final BlockGetter level, final BlockPos pos) {

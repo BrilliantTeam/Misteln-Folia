@@ -5,7 +5,7 @@ Subject: [PATCH] purpur-port: Configurable advancement broadcast settings
 
 
 diff --git a/net/minecraft/server/PlayerAdvancements.java b/net/minecraft/server/PlayerAdvancements.java
-index d447b444abd9b62ab241419301a96d19ae77a7eb..4e8ad80f11e229d4cbb5cc577afc10931b308558 100644
+index e70701663abd6f19a506690167d80f0dceab8000..3c82531cd810a17708f371f0bf1a3759aebea3b5 100644
 --- a/net/minecraft/server/PlayerAdvancements.java
 +++ b/net/minecraft/server/PlayerAdvancements.java
 @@ -193,6 +193,7 @@ public class PlayerAdvancements {

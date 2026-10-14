@@ -5,10 +5,10 @@ Subject: [PATCH] purpur-port: Configurable settings
 
 
 diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
-index c52d41fd078b7f7aeb3633a9c196bbaba299af0f..227d699790d2f0f01e83412088ed47590f761af3 100644
+index eb868697ecf198db9cf0a89d14553fc5d9a2ad2f..941a8fa8da8292e061e303251fb5c055e2aa44df 100644
 --- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
 +++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
-@@ -411,4 +411,28 @@ public class GlobalConfiguration extends ConfigurationPart {
+@@ -407,4 +407,28 @@ public class GlobalConfiguration extends ConfigurationPart {
          }
      }
      // Folia end - threaded regions
