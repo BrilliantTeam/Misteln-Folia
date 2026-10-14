@@ -11130,7 +11130,7 @@ index cc6f4e2845ef1e95c765d65f17c8aa1b06652927..7316c756f1c228eef710219a659c7968
                  foundPlayers.add(player);
              }
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index ea4cc487002a0edc54cc49bfbecf72be156b6af7..dc78c1af0a0ccf2bdca68718156b65262b6c6652 100644
+index ea4cc487002a0edc54cc49bfbecf72be156b6af7..f61b4cd8412218bd6a8a00fa1a89a4babaa67f78 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
 @@ -193,11 +193,11 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
@@ -12277,12 +12277,15 @@ index ea4cc487002a0edc54cc49bfbecf72be156b6af7..dc78c1af0a0ccf2bdca68718156b6526
              if (!(entity instanceof ServerPlayer) && entity.getRemovalReason() != net.minecraft.world.entity.Entity.RemovalReason.CHANGED_DIMENSION) {
                  for (ServerPlayer player : ServerLevel.this.server.getPlayerList().getPlayers()) { // Paper - call onEntityRemove for all online players
                      player.getBukkitEntity().onEntityRemove(entity);
-@@ -3242,11 +3362,11 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
+@@ -3242,11 +3362,14 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
      private long lagCompensationTick = currentLagCompensationTick();
  
      public long getLagCompensationTick() {
 -        return this.lagCompensationTick;
-+        return this.getCurrentWorldData().getLagCompensationTick(); // Folia - region threading
++        // Folia start - region threading - no region context during login
++        final io.papermc.paper.threadedregions.RegionizedWorldData worldData = this.getCurrentWorldData();
++        return worldData == null ? currentLagCompensationTick() : worldData.getLagCompensationTick();
++        // Folia end - region threading
      }
  
      public void updateLagCompensationTick() {
@@ -20091,6 +20094,19 @@ index f359e53024019f35aaa5cd8477da708bda2fc57a..81c1541d8fa272e84316e87c3418ee72
 +        } // Folia - make map data thread-safe
          NbtUtils.addCurrentDataVersion(tag);
          return tag;
+     }
+diff --git a/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java b/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java
+index 058afc8fa19935df1abc60a5a7aab34d3797ae97..295aa7a605ac957605d0bf0c2f8e4e007d088354 100644
+--- a/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java
++++ b/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java
+@@ -123,7 +123,7 @@ public class ExplorationMapFunction extends LootItemConditionalFunction {
+     private void claimStructureAt(final ServerLevel level, final BlockPos pos) {
+         StructureManager structureManager = level.structureManager();
+         StructureStart start = structureManager.getStructureAt(pos, this.destination);
+-        if (start.isValid() && start.canBeReferenced()) {
++        if (start.isValid() && start.tryReference()) { // Folia - region threading - use tryReference()
+             structureManager.addReference(start);
+         }
      }
 diff --git a/net/minecraft/world/ticks/LevelChunkTicks.java b/net/minecraft/world/ticks/LevelChunkTicks.java
 index 88eb48034d8022600dc08b4dcf6162bbdd8c6d33..ddb55f5b7088c84607a457e3e1d6041e2cebf6e3 100644
