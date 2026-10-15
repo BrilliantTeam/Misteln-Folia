@@ -5,7 +5,7 @@ Subject: [PATCH] Allow-sand-duplication
 
 
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index e84201956d2a0a61d28948050703595332a43381..f1c6cf8598996f24b62c3567187ec9121b3d2298 100644
+index 6bb9428962fd39b68319edf6d717c5f9b9d8fded..66e535cc38df49d0f4d218a3b1a6b84fe47fdb41 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -4741,13 +4741,16 @@ public abstract class Entity
@@ -27,8 +27,8 @@ index e84201956d2a0a61d28948050703595332a43381..f1c6cf8598996f24b62c3567187ec912
                                      false, false,
                                      Relative.union(Relative.DELTA, Set.of(Relative.X_ROT)),
                                      TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET),
-@@ -4949,6 +4952,11 @@ public abstract class Entity
-         if (!this.canPortalAsync(destination, takePassengers)) {
+@@ -4950,6 +4953,11 @@ public abstract class Entity
+             || !this.canPortalAsync(destination, takePassengers)) {
              return false;
          }
 +        // Misteln-Folia start - sync end platform spawning & entity teleportation
@@ -39,7 +39,7 @@ index e84201956d2a0a61d28948050703595332a43381..f1c6cf8598996f24b62c3567187ec912
  
          Vec3 initialPosition = this.position();
          ChunkPos initialPositionChunk = new ChunkPos(
-@@ -5013,8 +5021,8 @@ public abstract class Entity
+@@ -5014,8 +5022,8 @@ public abstract class Entity
                          info.postTeleportTransition().onTransition(teleported);
                      }
  

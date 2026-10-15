@@ -5,7 +5,7 @@ Subject: [PATCH] Inject ReadOnlyPlayerTeleportEvent into teleportAsync
 
 
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index 150096e9e1d2ea22a122880ee3b1c807e512b960..e84201956d2a0a61d28948050703595332a43381 100644
+index 7b8d9cdb7b0b1bf51b417962625a87afd7d2fa42..6bb9428962fd39b68319edf6d717c5f9b9d8fded 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -4607,6 +4607,25 @@ public abstract class Entity

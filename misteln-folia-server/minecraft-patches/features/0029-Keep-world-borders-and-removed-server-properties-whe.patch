@@ -30,7 +30,7 @@ index 458a1025d36655de7aa1bad9f2e7544626508be7..b85b0084621c23f71303b983b863b4e8
      public final int queryPort = this.get("query.port", 25565);
      public final boolean enableRcon = this.get("enable-rcon", false);
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index cbf45d9007035f9213176ff4cd0063e858926428..439a7031e0508f25ed1957c6089cf4ecdf238421 100644
+index 3d352bb9b0606236d789a70897d7bec12bcf6846..cbe1ad91547bff293f4ffca1b3f5bef26b3c5695 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
 @@ -594,7 +594,19 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet

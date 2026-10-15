@@ -5,7 +5,7 @@ Subject: [PATCH] Smooth same-region teleport for non-player-controlled
 
 
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index f1c6cf8598996f24b62c3567187ec9121b3d2298..3914b82e4450d918510c233b6f84fc80119dae0f 100644
+index 66e535cc38df49d0f4d218a3b1a6b84fe47fdb41..2754954c9ad5004d0d27bb7ef60705b78cc36bf8 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -4632,9 +4632,18 @@ public abstract class Entity

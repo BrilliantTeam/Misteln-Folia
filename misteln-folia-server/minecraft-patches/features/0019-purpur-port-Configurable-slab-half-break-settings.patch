@@ -5,7 +5,7 @@ Subject: [PATCH] purpur-port: Configurable slab half break settings
 
 
 diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
-index c464e71470d085ac9446806b4acd31aa6f402aa1..707949384783b2955cd30fbd2fbe076ba1e76c23 100644
+index f2b4023b14a7032c6de5827157f2d3c75957cd1c..968e517ca65f122950940ad191ea9d3ce8242345 100644
 --- a/net/minecraft/server/level/ServerPlayerGameMode.java
 +++ b/net/minecraft/server/level/ServerPlayerGameMode.java
 @@ -401,6 +401,7 @@ public class ServerPlayerGameMode {

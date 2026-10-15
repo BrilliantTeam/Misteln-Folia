@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RICE0707 <master.end.9377@gmail.com>
+Date: Thu, 15 Oct 2026 09:11:32 +0800
+Subject: [PATCH] Use tryReference when claiming exploration map structures
+
+
+diff --git a/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java b/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java
+index 058afc8fa19935df1abc60a5a7aab34d3797ae97..8b625bbdbb9d62179896fd37b043b9f9e2b8163f 100644
+--- a/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java
++++ b/net/minecraft/world/level/storage/loot/functions/ExplorationMapFunction.java
+@@ -123,7 +123,7 @@ public class ExplorationMapFunction extends LootItemConditionalFunction {
+     private void claimStructureAt(final ServerLevel level, final BlockPos pos) {
+         StructureManager structureManager = level.structureManager();
+         StructureStart start = structureManager.getStructureAt(pos, this.destination);
+-        if (start.isValid() && start.canBeReferenced()) {
++        if (start.isValid() && start.tryReference()) { // Misteln - Folia blocks canBeReferenced(), use the atomic tryReference()
+             structureManager.addReference(start);
+         }
+     }

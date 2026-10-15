@@ -17,7 +17,7 @@ index 4b936b05e21c077a3737bcde356113292aee0240..0199e2e03c9ac169a51e13ffe7b5ddaf
  
      @Override
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java
-index 4b6cf1e39c88b975cb8181eadfc7b371ccd1c4bd..0fd15fffc8f297b9c743883f3bba00802954d2f5 100644
+index 21278df83367497d1db5d1b472ce43568ccb1224..c97feed69d355f8b6e9ff6cf8c31db1a5646e715 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java
 +++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java
 @@ -44,6 +44,7 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
