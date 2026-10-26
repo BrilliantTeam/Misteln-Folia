@@ -5,7 +5,7 @@ Subject: [PATCH] Handle entity tag migration
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
-index e7e084e0ed326d152e0fc716871efaadd8308151..6e84609f5d8c0ed06fd8e1a218713ba01ef5b9f1 100644
+index 11434e903958912d42cfce918d6abec40b54bb9d..7b9cf580e2ce3f8f4e6231ba972097b5cb8dbdee 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
 +++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
 @@ -88,6 +88,13 @@ public class CraftMetaArmorStand extends CraftMetaItem implements com.destroysto

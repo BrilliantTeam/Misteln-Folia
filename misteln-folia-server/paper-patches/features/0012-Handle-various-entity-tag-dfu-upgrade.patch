@@ -5,7 +5,7 @@ Subject: [PATCH] Handle various entity tag dfu upgrade
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
-index 6e84609f5d8c0ed06fd8e1a218713ba01ef5b9f1..0745d5951acaedd8d0deae833446529a5ada9088 100644
+index 7b9cf580e2ce3f8f4e6231ba972097b5cb8dbdee..9f11cd764e0f400492c81c9360d9eeeafcccfd99 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
 +++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
 @@ -1,5 +1,7 @@
