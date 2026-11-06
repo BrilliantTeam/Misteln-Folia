@@ -5,10 +5,10 @@ Subject: [PATCH] Allow-sand-duplication
 
 
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index 6bb9428962fd39b68319edf6d717c5f9b9d8fded..66e535cc38df49d0f4d218a3b1a6b84fe47fdb41 100644
+index e3c0b57cf99f86affd606d0f9af0447f1d386ff7..366a896e65c9625b8e8d97cf69c0d1fe4ebbd0e6 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
-@@ -4741,13 +4741,16 @@ public abstract class Entity
+@@ -4742,13 +4742,16 @@ public abstract class Entity
                          targetPos, 16, // load 16 blocks to be safe from block physics
                          ca.spottedleaf.concurrentutil.util.Priority.HIGH,
                          (chunks) -> {
@@ -27,7 +27,7 @@ index 6bb9428962fd39b68319edf6d717c5f9b9d8fded..66e535cc38df49d0f4d218a3b1a6b84f
                                      false, false,
                                      Relative.union(Relative.DELTA, Set.of(Relative.X_ROT)),
                                      TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET),
-@@ -4950,6 +4953,11 @@ public abstract class Entity
+@@ -4951,6 +4954,11 @@ public abstract class Entity
              || !this.canPortalAsync(destination, takePassengers)) {
              return false;
          }
@@ -39,7 +39,7 @@ index 6bb9428962fd39b68319edf6d717c5f9b9d8fded..66e535cc38df49d0f4d218a3b1a6b84f
  
          Vec3 initialPosition = this.position();
          ChunkPos initialPositionChunk = new ChunkPos(
-@@ -5014,8 +5022,8 @@ public abstract class Entity
+@@ -5015,8 +5023,8 @@ public abstract class Entity
                          info.postTeleportTransition().onTransition(teleported);
                      }
  
